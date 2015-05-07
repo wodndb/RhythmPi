@@ -96,15 +96,6 @@ void setOutputGPIO(int gpio_input_stat) {
 	}
 }
 
-void printGPIOStat(int gpio_input_stat) {
-	int pin;
-
-	for( pin = 10; pin >= 0; pin-- ) {
-		printf("| %s ", (gpio_input_stat & (0x01 << pin)) >> pin == 0x01 ? "##" : "  ");
-	}
-	printf("|\n");
-}
-
 int checkRotDirection(int prev_gpio_stat, int cur_gpio_stat, int fx_num ) {
 	int prev_loc; 
 	int cur_loc;
@@ -136,14 +127,34 @@ int checkRotDirection(int prev_gpio_stat, int cur_gpio_stat, int fx_num ) {
 	}
 }
 
+void printGPIOStat(int prev_gpio_stat, int cur_gpio_stat) {
+	int pin;
+	int fx1 = checkRotDirection(prev_gpio_stat, cur_gpio_stat, 1);
+	int fx2 = checkRotDirection(prev_gpio_stat, cur_gpio_stat, 2);
+
+	for (pin = 10; pin >= 0; pin--) {
+		printf("| %s ", (gpio_input_stat & (0x01 << pin)) >> pin == 0x01 ? "##" : "  ");
+		
+		if(fx1 == ROT_LEFT) {printf("| ◀◀ "); }
+		else if(fx1 == ROT_RIGHT) {printf("| ▶▶ "); }
+		else {printf("|  ●  "); }
+
+		if(fx2 == ROT_LEFT) {printf("| ◀◀ "); }
+		else if(fx2 == ROT_RIGHT) {printf("| ▶▶ "); }
+		else {printf("|  ●  "); }
+	}
+	printf("|\n");
+}
+
 int main(void) {
 	int gpioStat;
-	int prevGpioStat;
+	int prevGpioStat = inputPIOStat();
 	initPinMode();
 	while( 1 ) {
 		gpioStat = inputGPIOStat();
 		setOutputGPIO(gpioStat);
-		printGPIOStat(gpioStat);
+		printGPIOStat(prevGpioStat, gpioStat);
+		prevGpioStat = gpioStat;
 	}
 
 	return 0;
