@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <wiringPi.h>
 
-/////
-//     +--------------------------------------------------------------+
+/////                                                                 /////
+//     +--------------------------------------------------------------+  //
 //     |      DESCRIPTION ABOUT MAPPING OF WIRING PI PIN NUMBER       |
 //     +--------+--------+-------------------+-------+-------+--------+
 //     |        | WIRING |                   |       |       |        |
@@ -36,10 +36,11 @@
 #define NB1_PIN_B    8   //     NB1 B PIN    |   ON  |  OFF  |  INPUT |
 #define NB2_PIN_A    9   //     NB2 A PIN    |   ON  |  OFF  |  INPUT |
 #define NB2_PIN_B   10   //     NB2 B PIN    |   ON  |  OFF  |  INPUT |
-//     +----------+------+-------------------+-------+-------+--------+
+//     +----------+------+-------------------+-------+-------+--------+  //
+/////                                                                 /////
 
-#define ROT_RIGHT 0x100;
-#define ROT_LEFT  0x200;
+#define ROT_RIGHT 0x100
+#define ROT_LEFT  0x200
 
 // Pin of wiringPi for read
 int readPinArray[11] = { NB2_PIN_B, NB2_PIN_A, NB1_PIN_B, NB1_PIN_A,
@@ -135,13 +136,25 @@ void printGPIOStat(int prev_gpio_stat, int cur_gpio_stat) {
 	for (pin = 10; pin >= 0; pin--) {
 		printf("| %s ", (gpio_input_stat & (0x01 << pin)) >> pin == 0x01 ? "##" : "  ");
 		
-		if(fx1 == ROT_LEFT) {printf("| ◀◀ "); }
-		else if(fx1 == ROT_RIGHT) {printf("| ▶▶ "); }
-		else {printf("|  ●  "); }
+		if(fx1 == ROT_LEFT) {
+			printf("| ◀◀ ");
+		}
+		else if(fx1 == ROT_RIGHT) {
+			printf("| ▶▶ ");
+		}
+		else {
+			printf("|  ●  ");
+		}
 
-		if(fx2 == ROT_LEFT) {printf("| ◀◀ "); }
-		else if(fx2 == ROT_RIGHT) {printf("| ▶▶ "); }
-		else {printf("|  ●  "); }
+		if(fx2 == ROT_LEFT) {
+			printf("| ◀◀ ");
+		}
+		else if(fx2 == ROT_RIGHT) {
+			printf("| ▶▶ ");
+		}
+		else {
+			printf("|  ●  ");
+		}
 	}
 	printf("|\n");
 }
