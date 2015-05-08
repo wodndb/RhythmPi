@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <conio.h>
-#include <Windows.h>
 #include <string.h>
 #include <math.h>
 
@@ -17,7 +15,7 @@ typedef struct ksh_info {
 	char m[4][25];
 	int mvol;
 	int o;
-	char bg;
+	char bg[20];
 	char layer[20];
 	int po;
 	int plength;
@@ -27,6 +25,32 @@ typedef struct ksh_info {
 	char ver[10];
 } KshInfo;
 
+void testKshParsing(FILE* ksh_file_stream) {
+	char buffer[80];
+	char tbuffer[20];
+	char buffer2[20];
+	char *tokStr;
+	int i;
+
+	rewind(ksh_file_stream);
+	fseek(ksh_file_stream, 3, SEEK_SET);
+	fgets(buffer, 80, ksh_file_stream);
+	tokStr = strtok(buffer, "=");
+	
+	printf("%s", tokStr);
+	strcpy(tbuffer, tokStr);
+
+	tokStr = strtok(NULL, "\n");
+	printf("%s", tokStr);
+	
+	strcpy(buffer2, tokStr);
+	printf("%s\n", buffer2);
+
+	for(i = 0; i < strlen(tokStr); i++) {
+		printf("%c : %d\n", tbuffer[i], tbuffer[i]);
+	}
+}
+
 void getKshInfo(FILE* ksh_file_stream, KshInfo* ksh_form_info) {
 	char buffer[115];
 	char *tokAttr;
@@ -34,43 +58,43 @@ void getKshInfo(FILE* ksh_file_stream, KshInfo* ksh_form_info) {
 	int mIndex;
 
 	rewind(ksh_file_stream);
+	fseek(ksh_file_stream, 3, SEEK_SET);
 	fgets(buffer, 115, ksh_file_stream);
-	printf("%s", buffer);
-	while(!strcmp(buffer, "--")) {
-		tokAttr = strtok(buffer, " =");
-		tokAttrVal = strtok(NULL, " ;");
-
-		printf("%s %s\n", tokAttr, tokAttrVal);
-
-		if(strcmp(tokAttr, "title"))			{ strcpy(ksh_form_info->title, tokAttrVal); }
-		else if(strcmp(tokAttr, "artist"))		{ strcpy(ksh_form_info->artist, tokAttrVal); }
-		else if(strcmp(tokAttr, "effect"))		{ strcpy(ksh_form_info->effect, tokAttrVal); }
-		else if(strcmp(tokAttr, "jacket"))		{ strcpy(ksh_form_info->jacket, tokAttrVal); }
-		else if(strcmp(tokAttr, "illustrator"))	{ strcpy(ksh_form_info->illustrator, tokAttrVal); }
-		else if(strcmp(tokAttr, "difficulty"))	{ strcpy(ksh_form_info->difficulty, tokAttrVal); }
-		else if(strcmp(tokAttr, "level"))		{ ksh_form_info->level = atoi(tokAttrVal); }
-		else if(strcmp(tokAttr, "t"))			{ ksh_form_info->t = atoi(tokAttrVal); }
-		else if(strcmp(tokAttr, "mvol"))		{ ksh_form_info->mvol = atoi(tokAttrVal); }
-		else if(strcmp(tokAttr, "o"))			{ ksh_form_info->o = atoi(tokAttrVal); }
-		else if(strcmp(tokAttr, "bg"))			{ ksh_form_info->bg = atoi(tokAttrVal); }
-		else if(strcmp(tokAttr, "layer"))		{ strcpy(ksh_form_info->layer, tokAttrVal); }
-		else if(strcmp(tokAttr, "po"))			{ ksh_form_info->po = atoi(tokAttrVal); }
-		else if(strcmp(tokAttr, "plength"))		{ ksh_form_info->plength = atoi(tokAttrVal); }
-		else if(strcmp(tokAttr, "pfilteragin"))	{ ksh_form_info->pfilteragin = atoi(tokAttrVal); }
-		else if(strcmp(tokAttr, "filtertype"))	{ strcpy(ksh_form_info->filtertype, tokAttrVal); }
-		else if(strcmp(tokAttr, "chokkakuvol"))	{ ksh_form_info->chokkakuvol = atoi(tokAttrVal); }
-		else if(strcmp(tokAttr, "ver"))			{ strcpy(ksh_form_info->ver, tokAttrVal); }
-		else if(strcmp(tokAttr, "m"))			{
+	while(strcmp(buffer, "--\n") != 0) {
+		tokAttr = strtok(buffer, "=");
+		tokAttrVal = strtok(NULL, "\n");
+		
+		if(tokAttrVal == '\0') {}
+		else if(strncmp(tokAttr, "title", strlen(tokAttr) + 1) == 0) 		{ strcpy(ksh_form_info->title, tokAttrVal); }
+		else if(strncmp(tokAttr, "artist", strlen(tokAttr) + 1) == 0)		{ strcpy(ksh_form_info->artist, tokAttrVal); }
+		else if(strncmp(tokAttr, "effect", strlen(tokAttr) + 1) == 0)		{ strcpy(ksh_form_info->effect, tokAttrVal); }
+		else if(strncmp(tokAttr, "jacket", strlen(tokAttr) + 1) == 0)		{ strcpy(ksh_form_info->jacket, tokAttrVal); }
+		else if(strncmp(tokAttr, "illustrator", strlen(tokAttr) + 1) == 0)	{ strcpy(ksh_form_info->illustrator, tokAttrVal); }
+		else if(strncmp(tokAttr, "difficulty", strlen(tokAttr) + 1) == 0)	{ strcpy(ksh_form_info->difficulty, tokAttrVal); }
+		else if(strncmp(tokAttr, "level", strlen(tokAttr) + 1) == 0)		{ ksh_form_info->level = atoi(tokAttrVal); }
+		else if(strncmp(tokAttr, "t", strlen(tokAttr) + 1) == 0)		{ ksh_form_info->t = atoi(tokAttrVal); }
+		else if(strncmp(tokAttr, "mvol", strlen(tokAttr) + 1) == 0)		{ ksh_form_info->mvol = atoi(tokAttrVal); }
+		else if(strncmp(tokAttr, "o", strlen(tokAttr) + 1) == 0)		{ ksh_form_info->o = atoi(tokAttrVal); }
+		else if(strncmp(tokAttr, "bg", strlen(tokAttr) + 1) == 0)		{ strcpy(ksh_form_info->bg, tokAttrVal); }
+		else if(strncmp(tokAttr, "layer", strlen(tokAttr) + 1) == 0)		{ strcpy(ksh_form_info->layer, tokAttrVal); }
+		else if(strncmp(tokAttr, "po", strlen(tokAttr) + 1) == 0)		{ ksh_form_info->po = atoi(tokAttrVal); }
+		else if(strncmp(tokAttr, "plength", strlen(tokAttr) + 1) == 0)	 	{ ksh_form_info->plength = atoi(tokAttrVal); }
+		else if(strncmp(tokAttr, "pfilteragin", strlen(tokAttr) + 1) == 0)	{ ksh_form_info->pfilteragin = atoi(tokAttrVal); }
+		else if(strncmp(tokAttr, "filtertype", strlen(tokAttr) + 1) == 0)	{ strcpy(ksh_form_info->filtertype, tokAttrVal); }
+		else if(strncmp(tokAttr, "chokkakuvol", strlen(tokAttr) + 1) == 0)	{ ksh_form_info->chokkakuvol = atoi(tokAttrVal); }
+		else if(strncmp(tokAttr, "ver", strlen(tokAttr) + 1) == 0)		{ strcpy(ksh_form_info->ver, tokAttrVal); }
+		else if(strncmp(tokAttr, "m", strlen(tokAttr) + 1) == 0)		{
 			mIndex = 0;
+			tokAttrVal = strtok(tokAttrVal, ";");
 			while(tokAttrVal != NULL) {
 				strcpy(*(ksh_form_info->m + mIndex), tokAttrVal);
 				mIndex++;
-				tokAttr = strtok(NULL, ";");
+				tokAttrVal = strtok(NULL, ";");
 			}
 		}
 		else {}
 
-		fgets(buffer, 100, ksh_file_stream);
+		fgets(buffer, 115, ksh_file_stream);
 	}
 }
 
@@ -103,14 +127,17 @@ int main(void) {
 	FILE* kshFile;
 	char kshFileName[30] = {0};
 	char buffer[50] = {0};
-	KshInfo ki;
+	KshInfo *ki;
+
+	ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
 
 	scanf("%s", kshFileName);
 	kshFile = fopen(kshFileName, "r");
 	
-	getKshInfo(kshFile, &ki);
-	printKshInfo(&ki);
+	getKshInfo(kshFile, ki);
+	printKshInfo(ki);
 	
+
 	/*
 	while(!feof(kshFile)) {
 		fgets(buffer, 50, kshFile);
