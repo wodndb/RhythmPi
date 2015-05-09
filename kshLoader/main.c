@@ -125,6 +125,15 @@ void printKshInfo(KshInfo* ksh_form_info) {
 	printf("ver : %s\n", ksh_form_info->ver);
 }
 
+int getKshNoteType(FILE* ksh_file_stream) {
+	char buffer[80];
+	fgets(buffer, 80, ksh_file_stream);
+	if(buffer[0] == '1')		{ printf("BT-1"); }
+	else if(buffer[1] == '1')	{ printf("BT-2"); }
+	else if(buffer[2] == '1')	{ printf("BT-3"); }
+	else if(buffer[3] == '1')	{ printf("BT-4"); }
+}
+
 int main(void) {
 	FILE* kshFile;
 	char kshFileName[30] = {0};
