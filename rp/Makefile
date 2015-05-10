@@ -18,9 +18,11 @@ COMMONSRC=../Libs/esShader.c    \
           ../Libs/esTransform.c \
           ../Libs/esShapes.c    \
           ../Libs/esUtil.c      \
-          ../Libs/rpUtil.c
+          ../Libs/rpUtil.c      \
+          ../Libs/rpNote.c  
 COMMONHRD=../Libs/esUtil.h      \
-          ../Libs/rpUtil.h
+          ../Libs/rpUtil.h      \
+          ../Libs/rpNote.h      
 
 CH02SRC=main.c
 

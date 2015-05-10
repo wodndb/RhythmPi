@@ -4,4 +4,5 @@
 // COMPUTER SCIENCE AND ENGINEERING 2012136116
 // JAEU JEONG
 
+#include <rpNote.h>
 #include <stdio.h>

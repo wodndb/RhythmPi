@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <LinkedQueue.h>
+#include <wiringPi.h>
+//#include <LinkedQueue.h>
 
 typedef struct ksh_info {
 	char title[50];
@@ -138,20 +139,21 @@ int printKshNoteType(FILE* ksh_file_stream) {
 		fgets(buffer, 80, ksh_file_stream);
 		if(strcmp(buffer, "--\n") != 0) {
 			sw = 0;
-			if(buffer[0] == '1')	{ printf("BT-1 "); sw++;}
-			if(buffer[1] == '1')	{ printf("BT-2 "); sw++;}
-			if(buffer[2] == '1')	{ printf("BT-3 "); sw++;}
-			if(buffer[3] == '1')	{ printf("BT-4 "); sw++;}
-			if(buffer[5] != '0')	{ printf("FX-L "); sw++;}
-			if(buffer[6] != '0')	{ printf("FX-R "); sw++;}
-			if(buffer[8] != '0')	{ printf("NB-L "); sw++;}
-			if(buffer[9] != '0')	{ printf("NB-R "); sw++;}
+			if(buffer[0] == '1')	{ printf("    BT-1"); sw++;}
+			if(buffer[1] == '1')	{ printf("        BT-2"); sw++;}
+			if(buffer[2] == '1')	{ printf("            BT-3"); sw++;}
+			if(buffer[3] == '1')	{ printf("                BT-4"); sw++;}
+			if(buffer[5] != '0')	{ printf("    [[FX-L]]"); sw++;}
+			if(buffer[6] != '0')	{ printf("            [[FX-R]]"); sw++;}
+			if(buffer[8] != '-')	{ printf("NB-L"); sw++;}
+			if(buffer[9] != '-')	{ printf("                    NB-R"); sw++;}
 			printf("\n");
 		}
 		else {
-			printf("Measure : %d\n", ++measure;)
+			printf("<<-- Measure : %d -->>\n", ++measure);
 		}
-	} while(!feof(ksh_file_stream))
+		delay(20);	
+	} while(!feof(ksh_file_stream));
 }
 
 int main(void) {
@@ -167,6 +169,7 @@ int main(void) {
 	
 	getKshInfo(kshFile, ki);
 	printKshInfo(ki);
-	
+	printKshNoteType(kshFile);
+		
 	return 0;
 }

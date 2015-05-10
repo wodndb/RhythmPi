@@ -43,6 +43,6 @@
 typedef struct _note {
    int type;
    double time;
-} RpNote
+} RpNote;
 
 #endif /* RP_NOTE_H */

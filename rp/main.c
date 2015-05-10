@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <esUtil.h>
 #include <rpUtil.h>
+#include <rpNote.h>
 
 typedef struct
 {

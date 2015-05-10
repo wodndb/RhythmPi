@@ -1,4 +1,4 @@
-#include "LinkedQueue.h"
+#include <LinkedQueue.h>
 #include <stdio.h>
 #include <malloc.h>
 
