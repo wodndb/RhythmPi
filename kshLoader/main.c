@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <LinkedQueue.h>
 
 typedef struct ksh_info {
 	char title[50];
@@ -98,6 +99,7 @@ void getKshInfo(FILE* ksh_file_stream, KshInfo* ksh_form_info) {
 
 		fgets(buffer, 115, ksh_file_stream);
 	}
+	fseek(ksh_file_stream, -3, SEEK_CUR);
 }
 
 void printKshInfo(KshInfo* ksh_form_info) {
@@ -110,9 +112,11 @@ void printKshInfo(KshInfo* ksh_form_info) {
 	printf("difficulty : %s\n", ksh_form_info->difficulty);
 	printf("level : %d\n", ksh_form_info->level);
 	printf("t : %d\n", ksh_form_info->t);
+	
 	for(mIndex = 0; mIndex < 4; mIndex++) {
 		printf("m%d : %s\n", mIndex, *(ksh_form_info->m + mIndex));
 	}
+	
 	printf("mvol : %d\n", ksh_form_info->mvol);
 	printf("o : %d\n", ksh_form_info->o);
 	printf("bg : %s\n", ksh_form_info->bg);
@@ -125,13 +129,29 @@ void printKshInfo(KshInfo* ksh_form_info) {
 	printf("ver : %s\n", ksh_form_info->ver);
 }
 
-int getKshNoteType(FILE* ksh_file_stream) {
+int printKshNoteType(FILE* ksh_file_stream) {
+	int sw = 0;
+	int measure = 0;
 	char buffer[80];
-	fgets(buffer, 80, ksh_file_stream);
-	if(buffer[0] == '1')		{ printf("BT-1"); }
-	else if(buffer[1] == '1')	{ printf("BT-2"); }
-	else if(buffer[2] == '1')	{ printf("BT-3"); }
-	else if(buffer[3] == '1')	{ printf("BT-4"); }
+	
+	do {
+		fgets(buffer, 80, ksh_file_stream);
+		if(strcmp(buffer, "--\n") != 0) {
+			sw = 0;
+			if(buffer[0] == '1')	{ printf("BT-1 "); sw++;}
+			if(buffer[1] == '1')	{ printf("BT-2 "); sw++;}
+			if(buffer[2] == '1')	{ printf("BT-3 "); sw++;}
+			if(buffer[3] == '1')	{ printf("BT-4 "); sw++;}
+			if(buffer[5] != '0')	{ printf("FX-L "); sw++;}
+			if(buffer[6] != '0')	{ printf("FX-R "); sw++;}
+			if(buffer[8] != '0')	{ printf("NB-L "); sw++;}
+			if(buffer[9] != '0')	{ printf("NB-R "); sw++;}
+			printf("\n");
+		}
+		else {
+			printf("Measure : %d\n", ++measure;)
+		}
+	} while(!feof(ksh_file_stream))
 }
 
 int main(void) {

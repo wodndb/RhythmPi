@@ -25,14 +25,14 @@ int is_full(QType *q) {
 }
 
 //Insert element to Queue;
-void enqueue(QType *q, int data) {
+void enqueue(QType *q, RpNote note) {
 	QNode *temp = (QNode *)malloc(sizeof(QNode));
 	if(temp == NULL) {
 		qError("Can't allocation memory");
 	}
 	else {
 		//Initialize allocated node
-		temp->data = data;
+		temp->note = note;
 		temp->link = NULL;
 		if( is_empty(q) ) {
 			q->front = temp;
@@ -46,31 +46,31 @@ void enqueue(QType *q, int data) {
 }
 
 //Delete element from Queue;
-int dequeue(QType *q) {
+RpNote dequeue(QType *q) {
 	QNode *temp = q->front;
-	int data;
+	RpNote note;
 
 	if(is_empty(q)) {
 		qError("Queue is empty!");
 	}
 
 	else {
-		data = temp->data;
+		note = temp->note;
 		q->front = q->front->link;
 		if(q->front == NULL) {
 			q->rear = NULL;
 		}
 		free(temp);
-		return data;
+		return note;
 	}
 }
 
 //Peek element from Queue;
-int peek(QType *q) {
+RpNote peek(QType *q) {
 	if( is_empty(q) ) {
 		qError("Queue is empty");
 	}
 	else {
-		return q->front->data;
+		return q->front->note;
 	}
 }

@@ -37,13 +37,22 @@
 #define NB2_PIN_B   10   //     NB2 B PIN    |   ON  |  OFF  |  INPUT |
 //     +----------+------+-------------------+-------+-------+--------+
 
-#define ROT_RIGHT 0x100;
-#define ROT_LEFT  0x200;
+#define ROT_RIGHT 0x100
+#define ROT_LEFT  0x200
 
+// Initialize wiringPi pin mode
 void initPinMode(void);
+
+// GPIO stat for input signal
 int inputGPIOStat(void);
+
+// Setting GPIO stat for output signal
 void setOutputGPIO(int gpio_input_stat);
-void printGPIOStat(int gpio_input_stat);
+
+// Print GPIO input stat
+void printGPIOStat(int prev_gpio_stat, int cur_gpio_stat);
+
+// Check roatation of rotary encoder
 int checkRotDirection(int prev_gpio_stat, int cur_gpio_stat, int fx_num);
 
 #ifndef
