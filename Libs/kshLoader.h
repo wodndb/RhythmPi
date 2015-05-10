@@ -1,6 +1,10 @@
 #ifndef RP_KSH_LOADER_H
 #define RP_KSH_LOADER_H
 
+#include <rpNote.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 typedef struct ksh_info {
 	char title[50];
 	char artist[50];

@@ -6,7 +6,7 @@
 
 INCDIR=-I../Libs -I$(SDKSTAGE)/opt/vc/include -I$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads -I$(SDKSTAGE)/opt/vc/include/interface/vmcs_host/linux
 
-LIBS=-lGLESv2 -lEGL -lm -lbcm_host -L$(SDKSTAGE)/opt/vc/lib
+LIBS=-lGLESv2 -lEGL -lm -lbcm_host -lwiringPi -L$(SDKSTAGE)/opt/vc/lib
 
 # CFLAGS+=-DRPI_NO_X
 
@@ -19,19 +19,26 @@ COMMONSRC=../Libs/esShader.c    \
           ../Libs/esShapes.c    \
           ../Libs/esUtil.c      \
           ../Libs/rpUtil.c      \
-          ../Libs/rpNote.c  
+          ../Libs/rpNote.c      \
+          ../Libs/kshLoader.c
 COMMONHRD=../Libs/esUtil.h      \
           ../Libs/rpUtil.h      \
-          ../Libs/rpNote.h      
+          ../Libs/rpNote.h      \
+          ../Libs/kshLoader.h
 
 CH02SRC=main.c
 
+KSHLOAD=testKshLoader.c
+
 default: all
 
-all: main
+all: main testKshLoader
 
 clean:
 	find . -name "CH??_*" | xargs rm -f
 
 main: ${COMMONSRC} ${COMMONHDR} ${CH02SRC}
 	gcc $(CFLAGS) ${COMMONSRC} ${CH02SRC} -o ./$@ ${INCDIR} ${LIBS}
+
+testKshLoader: ${COMMONSRC} ${COMMONHDR} ${KSHLOAD}
+	gcc $(CFLAGS) ${COMMONSRC} ${KSHLOAD} -o ./$@ ${INCDIR} ${LIBS}

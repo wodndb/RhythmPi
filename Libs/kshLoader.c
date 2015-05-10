@@ -115,6 +115,10 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 	char buffer[80];
 	RpNote tempNote;
 	
+	printf("entering laodKshNote function!\n");
+
+	initQueue(qt_ksh_note);
+
 	do {
 		fgets(buffer, 80, ksh_file_stream);
 		if(strcmp(buffer, "--\n") != 0) {
@@ -157,19 +161,18 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 			//
 			// I will parsing knov!
 			//
-			printf("\n");
 		}
 		else {
 			measure++;
 			order = 0;
 		}
-		delay(20);	
 	} while(!feof(ksh_file_stream));
 }
 void printKshNote(QType *qt_ksh_note) {
+	printf("Entering printkshNote function!\n");
 	QNode* tempQNode = qt_ksh_note->front;
 	while(tempQNode->link != NULL) {
-		printf("MEASURE : %d, ORDER : %d, TYPE : %d", 
+		printf("MEASURE : %d, ORDER : %d, TYPE : %d\n", 
 			tempQNode->note.measure, tempQNode->note.order, tempQNode->note.type);
 		tempQNode = tempQNode->link;
 	}

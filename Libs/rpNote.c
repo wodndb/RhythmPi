@@ -54,7 +54,7 @@ void qError(char *message) {
 }
 
 //Initialize Function of Queue Structure
-void init(QType *q) {
+void initQueue(QType *q) {
 	q->front = NULL;
 	q->rear = NULL;
 }
@@ -72,10 +72,12 @@ int is_full(QType *q) {
 
 //Insert element to Queue;
 void enqueue(QType *q, RpNote note) {
-	QNode *temp = (QNode *)malloc(sizeof(QNode));
+	QNode *temp = (QNode *)malloc(1 * sizeof(QNode));
+
 	if(temp == NULL) {
 		qError("Can't allocation memory");
 	}
+
 	else {
 		//Initialize allocated node
 		temp->note = note;
