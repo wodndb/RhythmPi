@@ -24,7 +24,7 @@
 #include <kshLoader.h>
 #include <wiringPi.h>
 
-typedef struct
+typedef struct _user_data
 {
    // Handle to a program object
    GLuint programObject;
@@ -195,6 +195,21 @@ int Init ( ESContext *esContext )
    // Store the program object
    userData->programObject = programObject;
 
+   //getKshData
+   userData->ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
+   userData->kshFile = fopen("../kshLoader/test.ksh", "r");
+   userData->qtNote = (QType*)malloc(1 * sizeof(QType));
+
+   if(userData->kshFile == NULL) {
+      printf("file load error!\n");
+   }
+
+   getKshInfo(userData->kshFile, userData->ki);
+   loadKshNote(userData->kshFile, userData->qtNote);
+
+   printf("Start registering es functions\n");
+
+
    glClearColor ( 0.0f, 0.0f, 0.0f, 1.0f );
    return GL_TRUE;
 }
@@ -205,8 +220,10 @@ int Init ( ESContext *esContext )
 void Draw ( ESContext *esContext )
 {
    int nCntMax;
-   UserData *userData = esContext->userData;
-   QNode* tempQNode = userData->qtNote->front;
+   UserData *userData = ( UserData* ) esContext->userData;
+   QNode* tempQNode = NULL;
+   tempQNode = userData->qtNote->front;
+
    /*GLfloat vVertices[] = {  0.0f,  0.5f, 0.0f, 
                            -0.4f, -0.4f, 0.0f,
                             0.4f, -0.4f, 0.0f };*/
@@ -222,34 +239,79 @@ void Draw ( ESContext *esContext )
    glUseProgram ( userData->programObject );
 
    // Load the vertex data
+   /*
    glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vVertices );
    glEnableVertexAttribArray ( 0 );
 
    glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 );
-
+   */
    //==================
-   /*
+   
    while(tempQNode->link != NULL) {
       
       if(tempQNode->note.type == RP_NOTE_TYPE_BT_FIRST) {
+         vBtVertices[0][1] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp;
+         vBtVertices[0][4] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp - 0.05;
+         vBtVertices[0][7] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp;
+         vBtVertices[0][10] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp - 0.05;
+
          glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vBtVertices[0] );
+         glEnableVertexAttribArray( 0 );
+         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
       }
       if(tempQNode->note.type == RP_NOTE_TYPE_BT_SECOND) {
+         vBtVertices[1][1] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp;
+         vBtVertices[1][4] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp - 0.05;
+         vBtVertices[1][7] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp;
+         vBtVertices[1][10] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp - 0.05;
+
          glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vBtVertices[1] );
+         glEnableVertexAttribArray( 0 );
+         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
       }
       if(tempQNode->note.type == RP_NOTE_TYPE_BT_THIRD) {
+         vBtVertices[2][1] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp;
+         vBtVertices[2][4] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp - 0.05;
+         vBtVertices[2][7] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp;
+         vBtVertices[2][10] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp - 0.05;
+
          glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vBtVertices[2] );
+         glEnableVertexAttribArray( 0 );
+         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
       }
       if(tempQNode->note.type == RP_NOTE_TYPE_BT_FOURTH) {
+         vBtVertices[3][1] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp;
+         vBtVertices[3][4] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp - 0.05;
+         vBtVertices[3][7] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp;
+         vBtVertices[3][10] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp - 0.05;
+
          glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vBtVertices[3] );
+         glEnableVertexAttribArray( 0 );
+         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
       }
       if(tempQNode->note.type == RP_NOTE_TYPE_FX_LEFT) {
+         vFxVertices[0][1] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp;
+         vFxVertices[0][4] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp - 0.05;
+         vFxVertices[0][7] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp;
+         vFxVertices[0][10] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp - 0.05;
+
          glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vFxVertices[0] );
+         glEnableVertexAttribArray( 0 );
+         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
       }
       if(tempQNode->note.type == RP_NOTE_TYPE_FX_RIGHT) {
+         vFxVertices[1][1] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp;
+         vFxVertices[1][4] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp - 0.05;
+         vFxVertices[1][7] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp;
+         vFxVertices[1][10] = (float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max) - userData->temp - 0.05;
+
          glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vFxVertices[1] );
+         glEnableVertexAttribArray( 0 );
+         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
       }
-   }*/
+
+      tempQNode = tempQNode->link;
+   }
 }
 
 void Update ( ESContext *esContext, float deltaTime ) {
@@ -258,20 +320,22 @@ void Update ( ESContext *esContext, float deltaTime ) {
    
    if(!rp_kbhit()) {
       //rp_fpurge_stdin();
-      userData->temp += ( deltaTime * 60.0f );
+      userData->temp += deltaTime;
+   }
+   /*
       if( userData->temp >= 60.0f)
          userData->temp -= 60.0f;
-   /*
+   
       for(i = 0; i < 12; i++) {
          vVertices[i] = tVertices[i] * ( userData->temp / 360.0f );
       }
-   */
+   
       vVertices[1] = 1.0f - 2.0f * ( userData->temp / 60.0f );
       vVertices[4] = 0.95f - 2.0f * ( userData->temp / 60.0f ); 
       vVertices[7] = 1.0f - 2.0f * ( userData->temp / 60.0f );
       vVertices[10] = 0.95f - 2.0f * ( userData->temp / 60.0f );
    }
-   /*else {
+   else {
       printf("%c", rp_getch());
    }*/
 }
@@ -289,17 +353,8 @@ int main ( int argc, char *argv[] )
    if ( !Init ( &esContext ) )
       return 0;
 
-   userData.ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
-   userData.kshFile = fopen("../kshLoader/test.ksh", "r");
-   userData.qtNote = (QType*)malloc(1 * sizeof(QType));
-
-   if(userData.kshFile == NULL) {
-      printf("file load error!\n");
-   }
-
-   getKshInfo(userData.kshFile, userData.ki);
-   loadKshNote(userData.kshFile, userData.qtNote);
-
+   
+   
    esRegisterDrawFunc ( &esContext, Draw );
    esRegisterUpdateFunc ( &esContext, Update );
 
