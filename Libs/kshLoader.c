@@ -109,6 +109,7 @@ int printKshNoteType(FILE* ksh_file_stream) {
 }
 
 void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
+	int chkNoteNum = 0;
 	int order = 0;
 	int measure = 0;
 	char buffer[80];
@@ -124,6 +125,7 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 		fgets(buffer, 80, ksh_file_stream);
 		if(strcmp(buffer, "--\n") != 0) {
 			if(buffer[0] == '1') {
+				chkNoteNum++;
 				tempNote.order = ++order;
 				tempNote.type = RP_NOTE_TYPE_BT_FIRST;
 				tempNote.measure = measure;
@@ -131,6 +133,7 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 				if(order == 1) { pivotNode = qt_ksh_note->rear; }
 			}
 			if(buffer[1] == '1') {
+				chkNoteNum++;
 				tempNote.order = ++order;
 				tempNote.type = RP_NOTE_TYPE_BT_SECOND;
 				tempNote.measure = measure;
@@ -138,6 +141,7 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 				if(order == 1) { pivotNode = qt_ksh_note->rear; }
 			}
 			if(buffer[2] == '1') {
+				chkNoteNum++;
 				tempNote.order = ++order;
 				tempNote.type = RP_NOTE_TYPE_BT_THIRD;
 				tempNote.measure = measure;
@@ -145,6 +149,7 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 				if(order == 1) { pivotNode = qt_ksh_note->rear; }
 			}
 			if(buffer[3] == '1') {
+				chkNoteNum++;
 				tempNote.order = ++order;
 				tempNote.type = RP_NOTE_TYPE_BT_FOURTH;
 				tempNote.measure = measure;
@@ -152,6 +157,7 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 				if(order == 1) { pivotNode = qt_ksh_note->rear; }
 			}
 			if(buffer[5] != '0') {
+				chkNoteNum++;
 				tempNote.order = ++order;
 				tempNote.type = RP_NOTE_TYPE_FX_LEFT;
 				tempNote.measure = measure;
@@ -159,12 +165,17 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 				if(order == 1) { pivotNode = qt_ksh_note->rear; }
 			}
 			if(buffer[6] != '0') {
+				chkNoteNum++;
 				tempNote.order = ++order;
 				tempNote.type = RP_NOTE_TYPE_FX_RIGHT;
 				tempNote.measure = measure;
 				enqueue(qt_ksh_note, tempNote);
 				if(order == 1) { pivotNode = qt_ksh_note->rear; }
 			}
+			if(chkNoteNum == 0) {
+				order++;
+			}
+			chkNoteNum = 0;
 			//
 			// I will parsing knov!
 			//
@@ -178,6 +189,7 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 			}
 			printf("pass pivot node\n");
 			order = 0;
+			chkNoteNum = 0;
 		}
 	} while(!feof(ksh_file_stream));
 	printf("KshNote loading is finished!\n");
