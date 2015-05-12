@@ -26,17 +26,17 @@ void getKshInfo(FILE* ksh_file_stream, KshInfo* ksh_form_info) {
 		else if(strncmp(tokAttr, "illustrator", strlen(tokAttr) + 1) == 0)	{ strcpy(ksh_form_info->illustrator, tokAttrVal); }
 		else if(strncmp(tokAttr, "difficulty", strlen(tokAttr) + 1) == 0)	{ strcpy(ksh_form_info->difficulty, tokAttrVal); }
 		else if(strncmp(tokAttr, "level", strlen(tokAttr) + 1) == 0)		{ ksh_form_info->level = atoi(tokAttrVal); }
-		else if(strncmp(tokAttr, "t", strlen(tokAttr) + 1) == 0)			{ ksh_form_info->t = atoi(tokAttrVal); }
-		else if(strncmp(tokAttr, "mvol", strlen(tokAttr) + 1) == 0)			{ ksh_form_info->mvol = atoi(tokAttrVal); }
-		else if(strncmp(tokAttr, "o", strlen(tokAttr) + 1) == 0)			{ ksh_form_info->o = atoi(tokAttrVal); }
-		else if(strncmp(tokAttr, "bg", strlen(tokAttr) + 1) == 0)			{ strcpy(ksh_form_info->bg, tokAttrVal); }
+		else if(strncmp(tokAttr, "t", strlen(tokAttr) + 1) == 0)		{ ksh_form_info->t = atoi(tokAttrVal); }
+		else if(strncmp(tokAttr, "mvol", strlen(tokAttr) + 1) == 0)		{ ksh_form_info->mvol = atoi(tokAttrVal); }
+		else if(strncmp(tokAttr, "o", strlen(tokAttr) + 1) == 0)		{ ksh_form_info->o = atoi(tokAttrVal); }
+		else if(strncmp(tokAttr, "bg", strlen(tokAttr) + 1) == 0)		{ strcpy(ksh_form_info->bg, tokAttrVal); }
 		else if(strncmp(tokAttr, "layer", strlen(tokAttr) + 1) == 0)		{ strcpy(ksh_form_info->layer, tokAttrVal); }
-		else if(strncmp(tokAttr, "po", strlen(tokAttr) + 1) == 0)			{ ksh_form_info->po = atoi(tokAttrVal); }
+		else if(strncmp(tokAttr, "po", strlen(tokAttr) + 1) == 0)		{ ksh_form_info->po = atoi(tokAttrVal); }
 		else if(strncmp(tokAttr, "plength", strlen(tokAttr) + 1) == 0)	 	{ ksh_form_info->plength = atoi(tokAttrVal); }
 		else if(strncmp(tokAttr, "pfilteragin", strlen(tokAttr) + 1) == 0)	{ ksh_form_info->pfilteragin = atoi(tokAttrVal); }
 		else if(strncmp(tokAttr, "filtertype", strlen(tokAttr) + 1) == 0)	{ strcpy(ksh_form_info->filtertype, tokAttrVal); }
 		else if(strncmp(tokAttr, "chokkakuvol", strlen(tokAttr) + 1) == 0)	{ ksh_form_info->chokkakuvol = atoi(tokAttrVal); }
-		else if(strncmp(tokAttr, "ver", strlen(tokAttr) + 1) == 0)			{ strcpy(ksh_form_info->ver, tokAttrVal); }
+		else if(strncmp(tokAttr, "ver", strlen(tokAttr) + 1) == 0)		{ strcpy(ksh_form_info->ver, tokAttrVal); }
 		else if(strncmp(tokAttr, "m", strlen(tokAttr) + 1) == 0) {
 			mIndex = 0;
 			tokAttrVal = strtok(tokAttrVal, ";");
@@ -109,15 +109,16 @@ int printKshNoteType(FILE* ksh_file_stream) {
 }
 
 void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
-	int noteType;
 	int order = 0;
 	int measure = 0;
 	char buffer[80];
 	RpNote tempNote;
+	QNode *pivotNode = NULL;
 	
 	printf("entering laodKshNote function!\n");
 
 	initQueue(qt_ksh_note);
+	printf("Queue is initialized\n");
 
 	do {
 		fgets(buffer, 80, ksh_file_stream);
@@ -127,53 +128,66 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 				tempNote.type = RP_NOTE_TYPE_BT_FIRST;
 				tempNote.measure = measure;
 				enqueue(qt_ksh_note, tempNote);
+				if(order == 1) { pivotNode = qt_ksh_note->rear; }
 			}
 			if(buffer[1] == '1') {
 				tempNote.order = ++order;
 				tempNote.type = RP_NOTE_TYPE_BT_SECOND;
 				tempNote.measure = measure;
 				enqueue(qt_ksh_note, tempNote);
+				if(order == 1) { pivotNode = qt_ksh_note->rear; }
 			}
 			if(buffer[2] == '1') {
 				tempNote.order = ++order;
 				tempNote.type = RP_NOTE_TYPE_BT_THIRD;
 				tempNote.measure = measure;
 				enqueue(qt_ksh_note, tempNote);
+				if(order == 1) { pivotNode = qt_ksh_note->rear; }
 			}
 			if(buffer[3] == '1') {
 				tempNote.order = ++order;
 				tempNote.type = RP_NOTE_TYPE_BT_FOURTH;
 				tempNote.measure = measure;
 				enqueue(qt_ksh_note, tempNote);
+				if(order == 1) { pivotNode = qt_ksh_note->rear; }
 			}
 			if(buffer[5] != '0') {
 				tempNote.order = ++order;
 				tempNote.type = RP_NOTE_TYPE_FX_LEFT;
 				tempNote.measure = measure;
 				enqueue(qt_ksh_note, tempNote);
+				if(order == 1) { pivotNode = qt_ksh_note->rear; }
 			}
 			if(buffer[6] != '0') {
 				tempNote.order = ++order;
 				tempNote.type = RP_NOTE_TYPE_FX_RIGHT;
 				tempNote.measure = measure;
 				enqueue(qt_ksh_note, tempNote);
+				if(order == 1) { pivotNode = qt_ksh_note->rear; }
 			}
 			//
 			// I will parsing knov!
 			//
 		}
 		else {
+			printf("measure %d is finished\n", measure);
 			measure++;
+			while(pivotNode != NULL) {
+				pivotNode->note.max = order;
+				pivotNode = pivotNode->link;
+			}
+			printf("pass pivot node\n");
 			order = 0;
 		}
 	} while(!feof(ksh_file_stream));
+	printf("KshNote loading is finished!\n");
 }
 void printKshNote(QType *qt_ksh_note) {
 	printf("Entering printkshNote function!\n");
 	QNode* tempQNode = qt_ksh_note->front;
 	while(tempQNode->link != NULL) {
-		printf("MEASURE : %d, ORDER : %d, TYPE : %d\n", 
-			tempQNode->note.measure, tempQNode->note.order, tempQNode->note.type);
+		printf("MEASURE : %d, ORDER : %d of %d, TYPE : %d\n", 
+			tempQNode->note.measure, tempQNode->note.order, tempQNode->note.max, tempQNode->note.type);
 		tempQNode = tempQNode->link;
 	}
 }

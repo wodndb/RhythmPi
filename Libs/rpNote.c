@@ -10,41 +10,41 @@
 
 float v_rp_note_bt_1[] = { -0.1f, -0.1f, 0.0f, 
                            -0.1f,  0.1f, 0.0f,
-						   -0.3f, -0.1f, 0.0f,
-						   -0.3f,  0.1f, 0.0f };
+                           -0.3f, -0.1f, 0.0f,
+                           -0.3f,  0.1f, 0.0f };
 								  
 float v_rp_note_bt_2[] = { -0.1f, -0.1f, 0.0f, 
                            -0.1f,  0.1f, 0.0f,
-					       -0.3f, -0.1f, 0.0f,
-				           -0.3f,  0.1f, 0.0f };
+                           -0.3f, -0.1f, 0.0f,
+                           -0.3f,  0.1f, 0.0f };
 
 float v_rp_note_bt_3[] = { -0.1f, -0.1f, 0.0f, 
                            -0.1f,  0.1f, 0.0f,
-					       -0.3f, -0.1f, 0.0f,
-						   -0.3f,  0.1f, 0.0f };
+                           -0.3f, -0.1f, 0.0f,
+                           -0.3f,  0.1f, 0.0f };
 
 float v_rp_note_bt_4[] = { -0.1f, -0.1f, 0.0f, 
                            -0.1f,  0.1f, 0.0f,
-					       -0.3f, -0.1f, 0.0f,
-						   -0.3f,  0.1f, 0.0f };
+                           -0.3f, -0.1f, 0.0f,
+                           -0.3f,  0.1f, 0.0f };
 
 float v_rp_note_fx_l[] = { -0.1f, -0.1f, 0.0f, 
                            -0.1f,  0.1f, 0.0f,
-					   	   -0.3f, -0.1f, 0.0f,
-						   -0.3f,  0.1f, 0.0f };
+                           -0.3f, -0.1f, 0.0f,
+                           -0.3f,  0.1f, 0.0f };
 
 float v_rp_note_fx_r[] = { -0.1f, -0.1f, 0.0f, 
                            -0.1f,  0.1f, 0.0f,
-					       -0.3f, -0.1f, 0.0f,
-						   -0.3f,  0.1f, 0.0f };
+                           -0.3f, -0.1f, 0.0f,
+                           -0.3f,  0.1f, 0.0f };
 
 
-RpNote* createNote(int type, int measure, int order) {
+RpNote* createNote(int type, int measure, int order, int max) {
 	RpNote* tempNote = (RpNote*)malloc(1 * sizeof(RpNote));
 	tempNote->type = type;
 	tempNote->measure = measure;
 	tempNote->order = order;
-	
+	tempNote->max = max;
 	return tempNote;
 }
 

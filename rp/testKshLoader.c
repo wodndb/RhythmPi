@@ -14,9 +14,9 @@ int main(void) {
 
 	ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
 
-	printf("Please input ksh file : ");
-	scanf("%s", buffer);
-	kshFile = fopen(buffer, "r");
+	//printf("Please input ksh file : ");
+	//scanf("%s", buffer);
+	kshFile = fopen("../kshLoader/test.ksh", "r");
 
 	getKshInfo(kshFile, ki);
 	printKshInfo(ki);

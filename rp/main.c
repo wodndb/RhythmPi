@@ -21,18 +21,51 @@
 #include <esUtil.h>
 #include <rpUtil.h>
 #include <rpNote.h>
+#include <kshLoader.h>
+#include <wiringPi.h>
 
 typedef struct
 {
    // Handle to a program object
    GLuint programObject;
    float temp;
+   FILE* kshFile;
+   KshInfo *ki;
+   QType *qtNote;
 } UserData;
 
 GLfloat vVertices[] = { -0.1f, -0.1f, 0.0f, 
                         -0.1f,  0.1f, 0.0f,
                         -0.3f, -0.1f, 0.0f,
 			-0.3f,  0.1f, 0.0f };
+
+GLfloat vBtVertices[4][12] = { { -0.4f, -0.1f, 0.0f, 
+                                 -0.4f,  0.1f, 0.0f,
+                                 -0.6f, -0.1f, 0.0f,
+                                 -0.6f,  0.1f, 0.0f },
+                               { -0.1f, -0.1f, 0.0f, 
+                                 -0.1f,  0.1f, 0.0f,
+                                 -0.3f, -0.1f, 0.0f,
+                                 -0.3f,  0.1f, 0.0f },
+                               {  0.3f, -0.1f, 0.0f, 
+                                  0.3f,  0.1f, 0.0f,
+                                  0.1f, -0.1f, 0.0f,
+                                  0.1f,  0.1f, 0.0f },
+                               {  0.6f, -0.1f, 0.0f, 
+                                  0.6f,  0.1f, 0.0f,
+                                  0.4f, -0.1f, 0.0f,
+                                  0.4f,  0.1f, 0.0f } };
+
+GLfloat vFxVertices[2][12] = { { -0.1f, -0.1f, 0.0f, 
+                                 -0.1f,  0.1f, 0.0f,
+                                 -0.6f, -0.1f, 0.0f,
+                                 -0.6f,  0.1f, 0.0f },
+                               {  0.6f, -0.1f, 0.0f, 
+                                  0.6f,  0.1f, 0.0f,
+                                  0.1f, -0.1f, 0.0f,
+                                  0.1f,  0.1f, 0.0f } };
+ 
+
 
 GLfloat tVertices[] = {  0.2f, -0.1f, 0.0f, 
                          0.2f,  0.1f, 0.0f,
@@ -171,11 +204,14 @@ int Init ( ESContext *esContext )
 //
 void Draw ( ESContext *esContext )
 {
+   int nCntMax;
    UserData *userData = esContext->userData;
+   QNode* tempQNode = userData->qtNote->front;
    /*GLfloat vVertices[] = {  0.0f,  0.5f, 0.0f, 
                            -0.4f, -0.4f, 0.0f,
                             0.4f, -0.4f, 0.0f };*/
-      
+   GLfloat tempVertices[12] = {0};
+
    // Set the viewport
    glViewport ( 0, 0, esContext->width, esContext->height );
    
@@ -190,6 +226,30 @@ void Draw ( ESContext *esContext )
    glEnableVertexAttribArray ( 0 );
 
    glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 );
+
+   //==================
+   /*
+   while(tempQNode->link != NULL) {
+      
+      if(tempQNode->note.type == RP_NOTE_TYPE_BT_FIRST) {
+         glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vBtVertices[0] );
+      }
+      if(tempQNode->note.type == RP_NOTE_TYPE_BT_SECOND) {
+         glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vBtVertices[1] );
+      }
+      if(tempQNode->note.type == RP_NOTE_TYPE_BT_THIRD) {
+         glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vBtVertices[2] );
+      }
+      if(tempQNode->note.type == RP_NOTE_TYPE_BT_FOURTH) {
+         glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vBtVertices[3] );
+      }
+      if(tempQNode->note.type == RP_NOTE_TYPE_FX_LEFT) {
+         glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vFxVertices[0] );
+      }
+      if(tempQNode->note.type == RP_NOTE_TYPE_FX_RIGHT) {
+         glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vFxVertices[1] );
+      }
+   }*/
 }
 
 void Update ( ESContext *esContext, float deltaTime ) {
@@ -228,6 +288,17 @@ int main ( int argc, char *argv[] )
 
    if ( !Init ( &esContext ) )
       return 0;
+
+   userData.ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
+   userData.kshFile = fopen("../kshLoader/test.ksh", "r");
+   userData.qtNote = (QType*)malloc(1 * sizeof(QType));
+
+   if(userData.kshFile == NULL) {
+      printf("file load error!\n");
+   }
+
+   getKshInfo(userData.kshFile, userData.ki);
+   loadKshNote(userData.kshFile, userData.qtNote);
 
    esRegisterDrawFunc ( &esContext, Draw );
    esRegisterUpdateFunc ( &esContext, Update );

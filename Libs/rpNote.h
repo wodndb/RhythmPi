@@ -30,20 +30,21 @@
 #define RP_NOTE_H
 
 // Define note type
-#define RP_NOTE_TYPE_BT_FIRST   0x80   // |#| | | | // 0b 1000 0000
-#define RP_NOTE_TYPE_BT_SECOND  0x40   // | |#| | | // 0b 0100 0000
-#define RP_NOTE_TYPE_BT_THIRD   0x20   // | | |#| | // 0b 0010 0000
-#define RP_NOTE_TYPE_BT_FOURTH  0x10   // | | | |#| // 0b 0001 0000
-#define RP_NOTE_TYPE_FX_LEFT    0x08   // |###| | | // 0b 0000 1000
-#define RP_NOTE_TYPE_FX_RIGHT   0x04   // | | |###| // 0b 0000 0100
-                                       // +-+-+-+-+ // Line of judgement
-                                       // |1|2|3|4| // Arrangement of BT-button
-                                       // |FXL|FXR| // Arrangement of FX-button
+#define RP_NOTE_TYPE_BT_FIRST   0x080   // |#| | | | // 0b 1000 0000
+#define RP_NOTE_TYPE_BT_SECOND  0x040   // | |#| | | // 0b 0100 0000
+#define RP_NOTE_TYPE_BT_THIRD   0x020   // | | |#| | // 0b 0010 0000
+#define RP_NOTE_TYPE_BT_FOURTH  0x010   // | | | |#| // 0b 0001 0000
+#define RP_NOTE_TYPE_FX_LEFT    0x008   // |###| | | // 0b 0000 1000
+#define RP_NOTE_TYPE_FX_RIGHT   0x004   // | | |###| // 0b 0000 0100
+#define RP_NOTE_MEASURE		0x100   // +-+-+-+-+ // Line of judgement
+                                        // |1|2|3|4| // Arrangement of BT-button
+                                        // |FXL|FXR| // Arrangement of FX-button
 
 typedef struct _note {
    int type;
    int measure;
    int order;
+   int max;
 } RpNote;
 
 typedef struct queueNode {
@@ -51,11 +52,11 @@ typedef struct queueNode {
 	struct queueNode *link;
 } QNode;
 
-typedef struct qeueuType {
+typedef struct queueType {
 	QNode *front, *rear;
 } QType;
 
-RpNote* createNote(int type, int measure, int order);
+RpNote* createNote(int type, int measure, int order, int max);
 void qError(char *Message);				//Error Message Function
 void initQueue(QType *q);					//Initialize Function of Queue Structure
 int is_empty(QType *q);					//Check Queue State is empty or not empty
