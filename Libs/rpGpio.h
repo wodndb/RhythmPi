@@ -1,3 +1,22 @@
+///
+//  KOREA UNIVERSITY OF TECHNOLOGY AND EDUCATION
+//  SCHOOL OF COMPUTER SCIENCE AND ENGINEERING
+//  EMBEDDED APPLICATION AND PRACTICE 2015 SPRING TERM PROJECT
+//  RHYTHMPI : Rhythm game for raspberry pi
+//  url: http://www.koreatech.ac.kr    : Official Univ. home page
+//       http://cse.koreatech.ac.kr    : Official Dept. home page
+//
+// Author : 
+//  SCHOOL OF COMPUTER SCIENCE AND ENGINEERING
+//  2012136116 JEONG, JAE-U
+//  wodndb@koreatech.ac.kr
+//
+
+//
+/// \ file :  rpGpio.h
+/// \ brief : Librarys for handling GPIO signal about game controller
+//
+
 #ifndef RP_GPIO_H
 #define RP_GPIO_H
 
@@ -40,19 +59,48 @@
 #define ROT_RIGHT 0x100
 #define ROT_LEFT  0x200
 
-// Initialize wiringPi pin mode
+//
+/// \brief Initialize wiringPi pin mode
+//
+/// \param void                 this fuction has no parameter;
+//
 void initPinMode(void);
 
-// GPIO stat for input signal
+//
+/// \brief GPIO stat for input signal
+//
+/// \param void                 this fuction has no parameter;
+/// \return                     GPIO stat for input signal
 int inputGPIOStat(void);
 
-// Setting GPIO stat for output signal
+//
+/// \brief Setting GPIO stat for output signal
+//
+/// \param gpio_input_stat      gpio status about input signal (read)
+//
 void setOutputGPIO(int gpio_input_stat);
 
-// Print GPIO input stat
+//
+/// \brief Print GPIO input stat (for debugging)
+//
+/// \param prev_gpio_stat       Previous gpio status about input signal (read)
+/// \param cur_gpio_stat   		Current  gpio status about input signal (read)
+///
+///                             * This function need two of param for check
+///                             rotary encoder
+//
 void printGPIOStat(int prev_gpio_stat, int cur_gpio_stat);
 
-// Check roatation of rotary encoder
+//
+/// \brief Check roatation of rotary encoder
+//
+/// \param prev_gpio_stat       Previous gpio status about input signal (read)
+/// \param cur_gpio_stat   		Current  gpio status about input signal (read)
+/// \param fx_num               fx button type
+/// \return                     Rotate direction of rotary encoder
+///                             -1        : error or stoped
+///                             ROT_RIGHT : direction is right (ClockWise)
+///                             ROT_LEFT  : direction is left (ConterClockWise)
 int checkRotDirection(int prev_gpio_stat, int cur_gpio_stat, int fx_num);
 
-#ifndef
+#ifndef //RP_GPIO_H

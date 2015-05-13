@@ -37,40 +37,41 @@ typedef struct _user_data
 GLfloat vVertices[] = { -0.1f, -0.1f, 0.0f, 
                         -0.1f,  0.1f, 0.0f,
                         -0.3f, -0.1f, 0.0f,
-			-0.3f,  0.1f, 0.0f };
+			               -0.3f,  0.1f, 0.0f };
 
-GLfloat vBtVertices[4][12] = { { -0.4f, -0.1f, 0.0f, 
+GLfloat vRpVertices[7][12] = { { -0.4f, -0.1f, 0.0f,  //BT-0
                                  -0.4f,  0.1f, 0.0f,
                                  -0.6f, -0.1f, 0.0f,
                                  -0.6f,  0.1f, 0.0f },
-                               { -0.1f, -0.1f, 0.0f, 
+                               { -0.1f, -0.1f, 0.0f,  //BT-1
                                  -0.1f,  0.1f, 0.0f,
                                  -0.3f, -0.1f, 0.0f,
                                  -0.3f,  0.1f, 0.0f },
-                               {  0.3f, -0.1f, 0.0f, 
+                               {  0.3f, -0.1f, 0.0f,  //BT-2
                                   0.3f,  0.1f, 0.0f,
                                   0.1f, -0.1f, 0.0f,
                                   0.1f,  0.1f, 0.0f },
-                               {  0.6f, -0.1f, 0.0f, 
+                               {  0.6f, -0.1f, 0.0f,  //BT-3
                                   0.6f,  0.1f, 0.0f,
                                   0.4f, -0.1f, 0.0f,
-                                  0.4f,  0.1f, 0.0f } };
-
-GLfloat vFxVertices[2][12] = { { -0.1f, -0.1f, 0.0f, 
+                                  0.4f,  0.1f, 0.0f },
+                               {  0.0f,  0.0f, 0.0f,  //blank
+                                  0.0f,  0.0f, 0.0f,
+                                  0.0f,  0.0f, 0.0f,
+                                  0.0f,  0.0f, 0.0f }
+                               { -0.1f, -0.1f, 0.0f,  //FX-L
                                  -0.1f,  0.1f, 0.0f,
                                  -0.6f, -0.1f, 0.0f,
                                  -0.6f,  0.1f, 0.0f },
-                               {  0.6f, -0.1f, 0.0f, 
+                               {  0.6f, -0.1f, 0.0f,  //FX-R
                                   0.6f,  0.1f, 0.0f,
                                   0.1f, -0.1f, 0.0f,
                                   0.1f,  0.1f, 0.0f } };
  
-
-
 GLfloat tVertices[] = {  0.2f, -0.1f, 0.0f, 
                          0.2f,  0.1f, 0.0f,
                         -0.2f, -0.1f, 0.0f,
-			-0.2f,  0.1f, 0.0f };
+			               -0.2f,  0.1f, 0.0f };
 
 ///
 // Create a shader object, load the shader source, and
@@ -209,7 +210,6 @@ int Init ( ESContext *esContext )
 
    printf("Start registering es functions\n");
 
-
    glClearColor ( 0.0f, 0.0f, 0.0f, 0.0f );
    return GL_TRUE;
 }
@@ -220,14 +220,10 @@ int Init ( ESContext *esContext )
 void Draw ( ESContext *esContext )
 {
    int nCntMax;
+   int i = 0;
    UserData *userData = ( UserData* ) esContext->userData;
    QNode* tempQNode = NULL;
    tempQNode = userData->qtNote->front;
-
-   /*GLfloat vVertices[] = {  0.0f,  0.5f, 0.0f, 
-                           -0.4f, -0.4f, 0.0f,
-                            0.4f, -0.4f, 0.0f };*/
-   GLfloat tempVertices[12] = {0};
 
    // Set the viewport
    glViewport ( 0, 0, esContext->width, esContext->height );
@@ -248,66 +244,17 @@ void Draw ( ESContext *esContext )
    //==================
    
    while(tempQNode->link != NULL) {
-      
-      if(tempQNode->note.type == RP_NOTE_TYPE_BT_FIRST) {
-         vBtVertices[0][1] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
-         vBtVertices[0][4] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
-         vBtVertices[0][7] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
-         vBtVertices[0][10] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
-
-         glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vBtVertices[0] );
-         glEnableVertexAttribArray( 0 );
-         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-      }
-      if(tempQNode->note.type == RP_NOTE_TYPE_BT_SECOND) {
-         vBtVertices[1][1] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
-         vBtVertices[1][4] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
-         vBtVertices[1][7] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
-         vBtVertices[1][10] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
-
-         glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vBtVertices[1] );
-         glEnableVertexAttribArray( 0 );
-         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-      }
-      if(tempQNode->note.type == RP_NOTE_TYPE_BT_THIRD) {
-         vBtVertices[2][1] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
-         vBtVertices[2][4] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
-         vBtVertices[2][7] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
-         vBtVertices[2][10] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
-
-         glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vBtVertices[2] );
-         glEnableVertexAttribArray( 0 );
-         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-      }
-      if(tempQNode->note.type == RP_NOTE_TYPE_BT_FOURTH) {
-         vBtVertices[3][1] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
-         vBtVertices[3][4] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
-         vBtVertices[3][7] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
-         vBtVertices[3][10] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
-
-         glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vBtVertices[3] );
-         glEnableVertexAttribArray( 0 );
-         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-      }
-      if(tempQNode->note.type == RP_NOTE_TYPE_FX_LEFT) {
-         vFxVertices[0][1] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
-         vFxVertices[0][4] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
-         vFxVertices[0][7] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
-         vFxVertices[0][10] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
-
-         glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vFxVertices[0] );
-         glEnableVertexAttribArray( 0 );
-         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-      }
-      if(tempQNode->note.type == RP_NOTE_TYPE_FX_RIGHT) {
-         vFxVertices[1][1] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
-         vFxVertices[1][4] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
-         vFxVertices[1][7] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
-         vFxVertices[1][10] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
-
-         glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vFxVertices[1] );
-         glEnableVertexAttribArray( 0 );
-         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
+      for(i = 0; i <= 6; i++) {
+         if(i != 4 && tempQNode->note.type == (RP_NOTE_TYPE_BT_FIRST >> i)) {
+            vRpVertices[i][1] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
+            vRpVertices[i][4] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
+            vRpVertices[i][7] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp;
+            vRpVertices[i][10] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0 - userData->temp - 0.05;
+   
+            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vRpVertices[i] );
+            glEnableVertexAttribArray( 0 );
+            glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
+         }
       }
 
       tempQNode = tempQNode->link;
@@ -319,27 +266,9 @@ void Update ( ESContext *esContext, float deltaTime ) {
    UserData *userData = ( UserData* ) esContext->userData;
    
    if(!rp_kbhit()) {
-      //rp_fpurge_stdin();
-      userData->temp += deltaTime * (187.0 / 120.0);
-      //printf("%f\n", 1.0 / (float)(userData->ki->t));
-      //userData->temp += (1.0 / (float)(userData->ki->t));
+      //deltaTime = 120pbm(4/4 bit), userData->ki->t = bpm of song
+      userData->temp += deltaTime * (userData->ki->t / 120.0);
    }
-   /*
-      if( userData->temp >= 60.0f)
-         userData->temp -= 60.0f;
-   
-      for(i = 0; i < 12; i++) {
-         vVertices[i] = tVertices[i] * ( userData->temp / 360.0f );
-      }
-   
-      vVertices[1] = 1.0f - 2.0f * ( userData->temp / 60.0f );
-      vVertices[4] = 0.95f - 2.0f * ( userData->temp / 60.0f ); 
-      vVertices[7] = 1.0f - 2.0f * ( userData->temp / 60.0f );
-      vVertices[10] = 0.95f - 2.0f * ( userData->temp / 60.0f );
-   }
-   else {
-      printf("%c", rp_getch());
-   }*/
 }
 
 int main ( int argc, char *argv[] )
@@ -355,8 +284,6 @@ int main ( int argc, char *argv[] )
    if ( !Init ( &esContext ) )
       return 0;
 
-   
-   
    esRegisterDrawFunc ( &esContext, Draw );
    esRegisterUpdateFunc ( &esContext, Update );
 

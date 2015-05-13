@@ -1,3 +1,25 @@
+///
+//  KOREA UNIVERSITY OF TECHNOLOGY AND EDUCATION
+//  SCHOOL OF COMPUTER SCIENCE AND ENGINEERING
+//  EMBEDDED APPLICATION AND PRACTICE 2015 SPRING TERM PROJECT
+//  RHYTHMPI : Rhythm game for raspberry pi
+//  url: http://www.koreatech.ac.kr    : Official Univ. home page
+//       http://cse.koreatech.ac.kr    : Official Dept. home page
+//
+// Author : 
+//  SCHOOL OF COMPUTER SCIENCE AND ENGINEERING
+//  2012136116 JEONG, JAE-U
+//  wodndb@koreatech.ac.kr
+//
+
+//
+/// \ file :  rpGpio.c
+/// \ brief : Librarys for handling GPIO signal about game controller
+//
+
+///
+//  Includes
+//
 #include "rpGpio.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +42,17 @@ int writePinArray[11] = { 0, 0, 0, 0,
 
 int ROT_DATA[4] = { 0, 1, 3, 2 };
 
+//////////////////////////////////////////////////////////////////
+//
+//  Public Functions
+//
+//
 
+///
+// initPinMode()
+//
+//    Initialize wiringPi pin mode
+//
 void initPinMode(void) {
 	int pin;
 
@@ -42,11 +74,16 @@ void initPinMode(void) {
 	}
 }
 
-// This function returns input state of GPIO
+///
+// inputGPIOStat()
+//
+//    GPIO stat for input signal
+//
 int inputGPIOStat(void) {
 	int gpio_input_stat = 0x00;
 	int pin;
 	
+	// Read GPIO INPUT signal for all of buttons and encoders
 	for( pin = 0; pin < 11; pin++ ) {
 		gpio_input_stat |= digitalRead( readPinArray[pin] ) << pin;
 	}
@@ -54,14 +91,26 @@ int inputGPIOStat(void) {
 	return gpio_input_stat;
 }
 
+///
+// setOutputGPIO()
+//
+//    Setting GPIO stat for output signal
+//
 void setOutputGPIO(int gpio_input_stat) {
 	int pin;
 
+	// Setting OUTPUT GPIO signal for all of LED in buttons
+	// NOTE: Index of pinArray 0~3 is encoder, So for-loop number is 4 to 10.
 	for( pin = 4; pin < 11; pin++ ) {
 		digitalWrite( writePinArray[pin], (gpio_input_stat & (0x01 << pin)) >> pin );
 	}
 }
 
+///
+// checkRotDirection()
+//
+//    Check roatation of rotary encoder
+//
 int checkRotDirection(int prev_gpio_stat, int cur_gpio_stat, int fx_num ) {
 	int prev_loc; 
 	int cur_loc;
@@ -93,6 +142,11 @@ int checkRotDirection(int prev_gpio_stat, int cur_gpio_stat, int fx_num ) {
 	}
 }
 
+///
+// printGPIOStat()
+//
+//    Print GPIO input stat (for debugging)
+//
 void printGPIOStat(int prev_gpio_stat, int cur_gpio_stat) {
 	int pin;
 	int fx1 = checkRotDirection(prev_gpio_stat, cur_gpio_stat, 1);

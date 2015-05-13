@@ -1,44 +1,42 @@
-// KOREA UNIVERSITY OF TECHNOLOGY AND EDUCATION
-// EMBBEDDED APPLICATION AND PRACTICE
-// SPRING TERM PROJECT BASED ON RASPBERRY PI
-// COMPUTER SCIENCE AND ENGINEERING 2012136116
-// JAEU JEONG
+///
+//  KOREA UNIVERSITY OF TECHNOLOGY AND EDUCATION
+//  SCHOOL OF COMPUTER SCIENCE AND ENGINEERING
+//  EMBEDDED APPLICATION AND PRACTICE 2015 SPRING TERM PROJECT
+//  RHYTHMPI : Rhythm game for raspberry pi
+//  url: http://www.koreatech.ac.kr    : Official Univ. home page
+//       http://cse.koreatech.ac.kr    : Official Dept. home page
+//
+// Author : 
+//  SCHOOL OF COMPUTER SCIENCE AND ENGINEERING
+//  2012136116 JEONG, JAE-U
+//  wodndb@koreatech.ac.kr
+//
 
+// rpNote.c
+//
+//		Define notes that loaded from ksh files. 
+//		This library provides queue structure and functions to save
+//		a lot of notes that used in Rhythm pi
+//
+
+///
+//  Includes
+//
 #include <rpNote.h>
 #include <stdio.h>
 #include <malloc.h>
 
-float v_rp_note_bt_1[] = { -0.1f, -0.1f, 0.0f, 
-                           -0.1f,  0.1f, 0.0f,
-                           -0.3f, -0.1f, 0.0f,
-                           -0.3f,  0.1f, 0.0f };
-								  
-float v_rp_note_bt_2[] = { -0.1f, -0.1f, 0.0f, 
-                           -0.1f,  0.1f, 0.0f,
-                           -0.3f, -0.1f, 0.0f,
-                           -0.3f,  0.1f, 0.0f };
+//////////////////////////////////////////////////////////////////
+//
+//  Public Functions
+//
+//
 
-float v_rp_note_bt_3[] = { -0.1f, -0.1f, 0.0f, 
-                           -0.1f,  0.1f, 0.0f,
-                           -0.3f, -0.1f, 0.0f,
-                           -0.3f,  0.1f, 0.0f };
-
-float v_rp_note_bt_4[] = { -0.1f, -0.1f, 0.0f, 
-                           -0.1f,  0.1f, 0.0f,
-                           -0.3f, -0.1f, 0.0f,
-                           -0.3f,  0.1f, 0.0f };
-
-float v_rp_note_fx_l[] = { -0.1f, -0.1f, 0.0f, 
-                           -0.1f,  0.1f, 0.0f,
-                           -0.3f, -0.1f, 0.0f,
-                           -0.3f,  0.1f, 0.0f };
-
-float v_rp_note_fx_r[] = { -0.1f, -0.1f, 0.0f, 
-                           -0.1f,  0.1f, 0.0f,
-                           -0.3f, -0.1f, 0.0f,
-                           -0.3f,  0.1f, 0.0f };
-
-
+///
+// CreateNote()
+//
+//    Creates a note by allocate RpNote struct.
+//
 RpNote* createNote(int type, int measure, int order, int max) {
 	RpNote* tempNote = (RpNote*)malloc(1 * sizeof(RpNote));
 	tempNote->type = type;
@@ -48,29 +46,49 @@ RpNote* createNote(int type, int measure, int order, int max) {
 	return tempNote;
 }
 
-//Error Message Function
+///
+// qError()
+//
+//    Error Message Function
+//
 void qError(char *message) {
 	fprintf(stderr, "%s\n", message);
 }
 
-//Initialize Function of Queue Structure
+///
+// initQueue()
+//
+//    Initialize Function of Queue Structure
+//
 void initQueue(QType *q) {
 	q->front = NULL;
 	q->rear = NULL;
 }
 
-//Check Queue State is empty or not empty
+///
+// is_empty()
+//
+//    Check Queue State is empty or not empty
+//
 int is_empty(QType *q) {
 	return (q->front == NULL);
 }
 
-//Check Queue State is full or not full
-//NOTE: This function is not avilable now.
+///
+// is_full()
+//
+//    Check Queue State is full or not full
+//    NOTE: This function is not avilable now.
+//
 int is_full(QType *q) {
 	return 0;
 }
 
-//Insert element to Queue;
+///
+// enqueue()
+//
+//    Insert element to Queue
+//
 void enqueue(QType *q, RpNote note) {
 	QNode *temp = (QNode *)malloc(1 * sizeof(QNode));
 
@@ -93,7 +111,11 @@ void enqueue(QType *q, RpNote note) {
 	}
 }
 
-//Delete element from Queue;
+///
+// dequeue()
+//
+//    Delete element from Queue
+//
 RpNote dequeue(QType *q) {
 	QNode *temp = q->front;
 	RpNote note;
@@ -113,7 +135,11 @@ RpNote dequeue(QType *q) {
 	}
 }
 
-//Peek element from Queue;
+///
+// peek()
+//
+//    Peek element from Queue
+//
 RpNote peek(QType *q) {
 	if( is_empty(q) ) {
 		qError("Queue is empty");

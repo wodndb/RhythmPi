@@ -1,3 +1,27 @@
+///
+//  KOREA UNIVERSITY OF TECHNOLOGY AND EDUCATION
+//  SCHOOL OF COMPUTER SCIENCE AND ENGINEERING
+//  EMBEDDED APPLICATION AND PRACTICE 2015 SPRING TERM PROJECT
+//  RHYTHMPI : Rhythm game for raspberry pi
+//  url: http://www.koreatech.ac.kr    : Official Univ. home page
+//       http://cse.koreatech.ac.kr    : Official Dept. home page
+//
+// Author : 
+//  SCHOOL OF COMPUTER SCIENCE AND ENGINEERING
+//  2012136116 JEONG, JAE-U
+//  wodndb@koreatech.ac.kr
+//
+
+//
+/// \ file :  kshLoader.c
+/// \ brief : Librarys for loading songs imformation and notes from 
+//            ksh file format. And defines struct for saving information
+//            of ksh.
+//
+
+///
+// includes
+//
 #include <kshLoader.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,6 +29,17 @@
 #include <math.h>
 #include <wiringPi.h>
 
+//////////////////////////////////////////////////////////////////
+//
+//  Public Functions
+//
+//
+
+///
+// getKshInfo()
+//
+//    Creates a note by allocate RpNote struct.
+//
 void getKshInfo(FILE* ksh_file_stream, KshInfo* ksh_form_info) {
 	char buffer[115];
 	char *tokAttr;
@@ -15,9 +50,11 @@ void getKshInfo(FILE* ksh_file_stream, KshInfo* ksh_form_info) {
 	fseek(ksh_file_stream, 3, SEEK_SET);
 	fgets(buffer, 115, ksh_file_stream);
 	while(strcmp(buffer, "--\n") != 0) {
+		//Separate between attribute and value of ksh information by "="
 		tokAttr = strtok(buffer, "=");
 		tokAttrVal = strtok(NULL, "\n");
 		
+		//Check attribute name
 		if(tokAttrVal == '\0') {}
 		else if(strncmp(tokAttr, "title", strlen(tokAttr) + 1) == 0) 		{ strcpy(ksh_form_info->title, tokAttrVal); }
 		else if(strncmp(tokAttr, "artist", strlen(tokAttr) + 1) == 0)		{ strcpy(ksh_form_info->artist, tokAttrVal); }
@@ -39,6 +76,7 @@ void getKshInfo(FILE* ksh_file_stream, KshInfo* ksh_form_info) {
 		else if(strncmp(tokAttr, "ver", strlen(tokAttr) + 1) == 0)		{ strcpy(ksh_form_info->ver, tokAttrVal); }
 		else if(strncmp(tokAttr, "m", strlen(tokAttr) + 1) == 0) {
 			mIndex = 0;
+			//Separate each music file name by ";"
 			tokAttrVal = strtok(tokAttrVal, ";");
 			while(tokAttrVal != NULL) {
 				strcpy(*(ksh_form_info->m + mIndex), tokAttrVal);
@@ -55,6 +93,11 @@ void getKshInfo(FILE* ksh_file_stream, KshInfo* ksh_form_info) {
 	fseek(ksh_file_stream, -3, SEEK_CUR);
 }
 
+///
+// printKshInfo()
+//
+//    print ksh information (for debugging)
+//
 void printKshInfo(KshInfo* ksh_form_info) {
 	int mIndex;
 	printf("title : %s\n", ksh_form_info->title);
@@ -82,6 +125,11 @@ void printKshInfo(KshInfo* ksh_form_info) {
 	printf("ver : %s\n", ksh_form_info->ver);
 }
 
+///
+// printKshNoteType()
+//
+//    print note in ksh file format (for debugging)
+//
 int printKshNoteType(FILE* ksh_file_stream) {
 	int sw = 0;
 	int measure = 0;
@@ -108,6 +156,11 @@ int printKshNoteType(FILE* ksh_file_stream) {
 	} while(!feof(ksh_file_stream));
 }
 
+///
+// loadKshNote()
+//
+//    Loading notes in ksh file format based queue structure
+//
 void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 	int chkNoteNum = 0;
 	int order = 0;
@@ -115,6 +168,7 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 	char buffer[80];
 	RpNote tempNote;
 	QNode *pivotNode = NULL;
+	int i;
 	
 	printf("entering laodKshNote function!\n");
 
@@ -124,53 +178,16 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 	do {
 		fgets(buffer, 80, ksh_file_stream);
 		if(strcmp(buffer, "--\n") != 0) {
-			if(buffer[0] == '1') {
-				chkNoteNum++;
-				tempNote.order = ++order;
-				tempNote.type = RP_NOTE_TYPE_BT_FIRST;
-				tempNote.measure = measure;
-				enqueue(qt_ksh_note, tempNote);
-				if(order == 1) { pivotNode = qt_ksh_note->rear; }
-			}
-			if(buffer[1] == '1') {
-				chkNoteNum++;
-				tempNote.order = ++order;
-				tempNote.type = RP_NOTE_TYPE_BT_SECOND;
-				tempNote.measure = measure;
-				enqueue(qt_ksh_note, tempNote);
-				if(order == 1) { pivotNode = qt_ksh_note->rear; }
-			}
-			if(buffer[2] == '1') {
-				chkNoteNum++;
-				tempNote.order = ++order;
-				tempNote.type = RP_NOTE_TYPE_BT_THIRD;
-				tempNote.measure = measure;
-				enqueue(qt_ksh_note, tempNote);
-				if(order == 1) { pivotNode = qt_ksh_note->rear; }
-			}
-			if(buffer[3] == '1') {
-				chkNoteNum++;
-				tempNote.order = ++order;
-				tempNote.type = RP_NOTE_TYPE_BT_FOURTH;
-				tempNote.measure = measure;
-				enqueue(qt_ksh_note, tempNote);
-				if(order == 1) { pivotNode = qt_ksh_note->rear; }
-			}
-			if(buffer[5] != '0') {
-				chkNoteNum++;
-				tempNote.order = ++order;
-				tempNote.type = RP_NOTE_TYPE_FX_LEFT;
-				tempNote.measure = measure;
-				enqueue(qt_ksh_note, tempNote);
-				if(order == 1) { pivotNode = qt_ksh_note->rear; }
-			}
-			if(buffer[6] != '0') {
-				chkNoteNum++;
-				tempNote.order = ++order;
-				tempNote.type = RP_NOTE_TYPE_FX_RIGHT;
-				tempNote.measure = measure;
-				enqueue(qt_ksh_note, tempNote);
-				if(order == 1) { pivotNode = qt_ksh_note->rear; }
+			//i = 0~3 : BT01~04, i = 5 and 6 : FX-L and FX-R
+			for(i = 0; i <= 6; i++) {
+				if(buffer[i] != '0' && i != 4) {
+					chkNoteNum++;
+					tempNote.order = ++order;
+					tempNote.type = RP_NOTE_TYPE_BT_FIRST >> i;	//macro value is sequence
+					tempNote.measure = measure;
+					enqueue(qt_ksh_note, tempNote);
+					if(order == 1) { pivotNode = qt_ksh_note->rear; }
+				}
 			}
 			if(chkNoteNum == 0) {
 				order++;
@@ -194,6 +211,12 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 	} while(!feof(ksh_file_stream));
 	printf("KshNote loading is finished!\n");
 }
+
+///
+// loadKshNote()
+//
+//    print notes in ksh format (for debbuging)
+//
 void printKshNote(QType *qt_ksh_note) {
 	printf("Entering printkshNote function!\n");
 	QNode* tempQNode = qt_ksh_note->front;
