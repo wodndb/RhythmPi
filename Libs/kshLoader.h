@@ -34,25 +34,25 @@
 
 /// ksh file information
 typedef struct ksh_info {
-	char title[50];			// title of this song
-	char artist[50];		// who make this song
-	char effect[10];		// effect to display
-	char jacket[20];		// jacket of song
-	char illustrator[20];	// who make jacket
-	char difficulty[10];	// hardness of song
-	int level;				// level about difficult to play
-	int t;					// BPM - bit per minute
-	char m[4][25];			// music file names
-	int mvol;				// music volumes
-	int o;					// ?
-	char bg[20];			// background image
-	char layer[20];			// ?
-	int po;					// ?
-	int plength;			// ?
-	int pfilteragin;		// ?
+	char title[50];         // title of this song
+	char artist[50];        // who make this song
+	char effect[10];        // effect to display
+	char jacket[20];        // jacket of song
+	char illustrator[20];   // who make jacket
+	char difficulty[10];    // hardness of song
+	int level;              // level about difficult to play
+	int t;                  // BPM - bit per minute
+	char m[4][25];          // music file names
+	int mvol;               // music volumes
+	int o;                  // ?
+	char bg[20];            // background image
+	char layer[20];	        // ?
+	int po;	                // ?
+	int plength;            // ?
+	int pfilteragin;        // ?
 	char filtertype[20];	// ?
-	int chokkakuvol;		// ?
-	char ver[10];			// version of ksh file format
+	int chokkakuvol;        // ?
+	char ver[10];           // version of ksh file format
 } KshInfo;
 
 ///
@@ -62,37 +62,37 @@ typedef struct ksh_info {
 //
 /// \brief Creates a note by allocate RpNote struct.
 //
-/// \param ksh_file_stream      Stream that has ksh file
-/// \param ksh_form_info   		Ksh information structure
+/// \param ksh_file_stream      : Stream that has ksh file
+/// \param ksh_form_info        : Ksh information structure
 //
 void getKshInfo(FILE* ksh_file_stream, KshInfo* ksh_form_info);
 
 //
 /// \brief print ksh information (for debugging)
 //
-/// \param ksh_form_info   		Ksh information structure
+/// \param ksh_form_info        : Ksh information structure
 //
 void printKshInfo(KshInfo* ksh_form_info);
 
 //
 /// \brief print note in ksh file format (for debugging)
 //
-/// \param ksh_file_stream      Stream that has ksh file
+/// \param ksh_file_stream      : Stream that has ksh file
 //
 int printKshNoteType(FILE* ksh_file_stream);
 
 //
 /// \brief Loading notes in ksh file format based queue structure
 //
-/// \param ksh_file_stream      Stream that has ksh file
-/// \param qt_ksh_note   		Queue structure
+/// \param ksh_file_stream      : Stream that has ksh file
+/// \param qt_ksh_note          : Queue structure
 //
 void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note);
 
 //
 /// \brief print notes in ksh format (for debbuging)
 //
-/// \param qt_ksh_note      	Notes in queue
+/// \param qt_ksh_note          : Notes in queue
 //
 void printKshNote(QType *qt_ksh_note);
 

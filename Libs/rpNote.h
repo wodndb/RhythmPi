@@ -31,17 +31,20 @@
 #define RP_NOTE_H
 
 // Define note type
-#define RP_NOTE_TYPE_BT_FIRST   0x800   // |#| | | | // 0b 1000 0000
-#define RP_NOTE_TYPE_BT_SECOND  0x400   // | |#| | | // 0b 0100 0000
-#define RP_NOTE_TYPE_BT_THIRD   0x200   // | | |#| | // 0b 0010 0000
-#define RP_NOTE_TYPE_BT_FOURTH  0x100   // | | | |#| // 0b 0001 0000
+#define RP_NOTE_TYPE_LONG_END   0x4000
+#define RP_NOTE_TYPE_LONG_MID	0x2000
+#define RP_NOTE_TYPE_LONG_STT   0x1000
+#define RP_NOTE_TYPE_BT_FIRST   0x0800   // |#| | | | // 0b 1000 0000
+#define RP_NOTE_TYPE_BT_SECOND  0x0400   // | |#| | | // 0b 0100 0000
+#define RP_NOTE_TYPE_BT_THIRD   0x0200   // | | |#| | // 0b 0010 0000
+#define RP_NOTE_TYPE_BT_FOURTH  0x0100   // | | | |#| // 0b 0001 0000
 // Division Line between bt and fx, So 0x080 is jumped
-#define RP_NOTE_TYPE_FX_LEFT    0x040   // |###| | | // 0b 0000 1000
-#define RP_NOTE_TYPE_FX_RIGHT   0x020   // | | |###| // 0b 0000 0100
+#define RP_NOTE_TYPE_FX_LEFT    0x0040   // |###| | | // 0b 0000 1000
+#define RP_NOTE_TYPE_FX_RIGHT   0x0020   // | | |###| // 0b 0000 0100
 // Division Line between fx and knov, So 0x010 is jumped
-                                        // +-+-+-+-+ // Line of judgement
-                                        // |1|2|3|4| // Arrangement of BT-button
-                                        // |FXL|FXR| // Arrangement of FX-button
+                                         // +-+-+-+-+ // Line of judgement
+                                         // |1|2|3|4| // Arrangement of BT-button
+                                         // |FXL|FXR| // Arrangement of FX-button
 
 ///
 // structs

@@ -165,7 +165,9 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 	int chkNoteNum = 0;
 	int order = 0;
 	int measure = 0;
-	char buffer[80];
+	char buffer[80] = "0000|00|--";
+	char prevBuffer[80] = "0000|00|--";
+	char nextBuffer[80];
 	RpNote tempNote;
 	QNode *pivotNode = NULL;
 	int i;
@@ -174,25 +176,42 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 
 	initQueue(qt_ksh_note);
 	printf("Queue is initialized\n");
+	
+	fgets(nextBuffer, 80, ksh_file_stream);
+	strcpy(prevBuffer, buffer);
+	strcpy(buffer, nextBuffer);
 
 	do {
-		fgets(buffer, 80, ksh_file_stream);
+		fgets(nextBuffer, 80, ksh_file_stream);
 		if(strcmp(buffer, "--\n") != 0) {
 			//i = 0~3 : BT01~04, i = 5 and 6 : FX-L and FX-R
 			for(i = 0; i <= 6; i++) {
 				if(buffer[i] != '0' && i != 4) {
 					chkNoteNum++;
-					tempNote.order = ++order;
+					tempNote.order = order;
 					tempNote.type = RP_NOTE_TYPE_BT_FIRST >> i;	//macro value is sequence
 					tempNote.measure = measure;
+
+					//check type of long note
+					if((prevBuffer[i] != 'F' && buffer[i] == 'F' && nextBuffer[i] == 'F') || 
+                                           (prevBuffer[i] != 'H' && buffer[i] == 'H' && nextBuffer[i] == 'H')) {
+						tempNote.type |= RP_NOTE_TYPE_LONG_STT;
+					}
+					if((prevBuffer[i] == 'F' && buffer[i] == 'F' && nextBuffer[i] == 'F') || 
+                                           (prevBuffer[i] == 'H' && buffer[i] == 'H' && nextBuffer[i] == 'H')) {
+						tempNote.type |= RP_NOTE_TYPE_LONG_MID;
+					}
+                                        if((prevBuffer[i] == 'F' && buffer[i] == 'F' && nextBuffer[i] != 'F') || 
+                                           (prevBuffer[i] == 'H' && buffer[i] == 'H' && nextBuffer[i] != 'H')) {
+						tempNote.type |= RP_NOTE_TYPE_LONG_END;
+					}
+
 					enqueue(qt_ksh_note, tempNote);
-					if(order == 1) { pivotNode = qt_ksh_note->rear; }
+					if(chkNoteNum == 1) { pivotNode = qt_ksh_note->rear; }
 				}
 			}
-			if(chkNoteNum == 0) {
-				order++;
-			}
-			chkNoteNum = 0;
+			order++;
+			// chkNoteNum = 0;
 			//
 			// I will parsing knov!
 			//
@@ -208,6 +227,9 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 			order = 0;
 			chkNoteNum = 0;
 		}
+                strcpy(prevBuffer, buffer);
+                strcpy(buffer, nextBuffer);
+
 	} while(!feof(ksh_file_stream));
 	printf("KshNote loading is finished!\n");
 }
@@ -221,8 +243,9 @@ void printKshNote(QType *qt_ksh_note) {
 	printf("Entering printkshNote function!\n");
 	QNode* tempQNode = qt_ksh_note->front;
 	while(tempQNode->link != NULL) {
-		printf("MEASURE : %d, ORDER : %d of %d, TYPE : %d\n", 
+		printf("MEASURE : %3d, ORDER : %3d of %3d, TYPE : %5x\n", 
 			tempQNode->note.measure, tempQNode->note.order, tempQNode->note.max, tempQNode->note.type);
 		tempQNode = tempQNode->link;
+		delay(160);
 	}
 }
