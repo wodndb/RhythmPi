@@ -201,6 +201,7 @@ int Init ( ESContext *esContext )
    userData->ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
    userData->kshFile = fopen("../kshLoader/test.ksh", "r");
    userData->qtNote = (QType*)malloc(1 * sizeof(QType));
+   userData->temp = -1.0;
 
    if(userData->kshFile == NULL) {
       printf("file load error!\n");
@@ -290,6 +291,7 @@ void Draw ( ESContext *esContext )
 
       tempQNode = tempQNode->link;
    }
+   /*
       vRpVertices[4][1] = -userData->measureBar + 0.001;
       vRpVertices[4][4] = -userData->measureBar - 0.001;
       vRpVertices[4][7] = -userData->measureBar + 0.001;
@@ -298,6 +300,7 @@ void Draw ( ESContext *esContext )
       glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vRpVertices[4] );
       glEnableVertexAttribArray( 0 );
       glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
+   */
 }
 
 void Update ( ESContext *esContext, float deltaTime ) {
@@ -316,6 +319,7 @@ int main ( int argc, char *argv[] )
 {
    ESContext esContext;
    UserData  userData;
+   pid_t pid;
 
    esInitContext ( &esContext );
    esContext.userData = &userData;
@@ -328,7 +332,24 @@ int main ( int argc, char *argv[] )
    esRegisterDrawFunc ( &esContext, Draw );
    esRegisterUpdateFunc ( &esContext, Update );
 
-   esMainLoop ( &esContext );
+   pid = fork();
+
+   switch(pid) {
+      case -1:
+      {
+         printf("child process can't be created\n");
+         return -1;
+      }
+      case 0:
+      {
+         //system("omxplayer ../songs/ksm/homura/homura.ogg");
+         execlp("omxplayer", "omxplayer", "../songs/ksm/homura/homura_lt_f.ogg");
+      }
+      default:
+      {
+         esMainLoop ( &esContext );
+      }
+   }
 
    return 0;
 }
