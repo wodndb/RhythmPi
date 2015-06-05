@@ -264,8 +264,9 @@ void Draw ( ESContext *esContext )
             //If note is type of long note : end
             else if((tempQNode->note.type & RP_NOTE_TYPE_LONG_END) != 0) {
                lowNoteWidth = 1.0/(float)(tempQNode->note.max);
-               highNoteWidth = 0.025;
+               highNoteWidth = 2.0/(float)(tempQNode->note.max) + 0.025;
             }
+	
             else {
                lowNoteWidth = 0.025;
                highNoteWidth = 0.025;

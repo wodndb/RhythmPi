@@ -165,9 +165,11 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 	int chkNoteNum = 0;
 	int order = 0;
 	int measure = 0;
+	int flag = 0;
 	char buffer[80] = "0000|00|--";
 	char prevBuffer[80] = "0000|00|--";
 	char nextBuffer[80];
+	char tempBuffer[80];
 	RpNote tempNote;
 	QNode *pivotNode = NULL;
 	int i;
@@ -183,40 +185,48 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 
 	do {
 		fgets(nextBuffer, 80, ksh_file_stream);
-		if(strcmp(buffer, "--\n") != 0) {
-			//i = 0~3 : BT01~04, i = 5 and 6 : FX-L and FX-R
-			for(i = 0; i <= 6; i++) {
-				if(buffer[i] != '0' && i != 4) {
-					chkNoteNum++;
-					tempNote.order = order;
-					tempNote.type = RP_NOTE_TYPE_BT_FIRST >> i;	//macro value is sequence
-					tempNote.measure = measure;
-
-					//check type of long note
-					if((prevBuffer[i] != 'F' && buffer[i] == 'F' && nextBuffer[i] == 'F') || 
-                                           (prevBuffer[i] != 'H' && buffer[i] == 'H' && nextBuffer[i] == 'H')) {
-						tempNote.type |= RP_NOTE_TYPE_LONG_STT;
-					}
-					if((prevBuffer[i] == 'F' && buffer[i] == 'F' && nextBuffer[i] == 'F') || 
-                                           (prevBuffer[i] == 'H' && buffer[i] == 'H' && nextBuffer[i] == 'H')) {
-						tempNote.type |= RP_NOTE_TYPE_LONG_MID;
-					}
-                                        if((prevBuffer[i] == 'F' && buffer[i] == 'F' && nextBuffer[i] != 'F') || 
-                                           (prevBuffer[i] == 'H' && buffer[i] == 'H' && nextBuffer[i] != 'H')) {
-						tempNote.type |= RP_NOTE_TYPE_LONG_END;
-					}
-
-					enqueue(qt_ksh_note, tempNote);
-					if(chkNoteNum == 1) { pivotNode = qt_ksh_note->rear; }
-				}
-			}
-			order++;
-			// chkNoteNum = 0;
-			//
-			// I will parsing knov!
-			//
+		if(strcmp(nextBuffer, "--\n") == 0) {
+			strcpy(tempBuffer, nextBuffer);
+			flag = 1;
+			fgets(nextBuffer, 80, ksh_file_stream);
 		}
-		else {
+
+		//i = 0~3 : BT01~04, i = 5 and 6 : FX-L and FX-R
+		for(i = 0; i <= 6; i++) {
+			if(buffer[i] != '0' && i != 4) {
+				chkNoteNum++;
+				tempNote.order = order;
+				tempNote.type = RP_NOTE_TYPE_BT_FIRST >> i;	//macro value is sequence
+				tempNote.measure = measure;
+
+				//check type of long note
+				if((prevBuffer[i] != 'F' && buffer[i] == 'F' && nextBuffer[i] == 'F') || 
+				   (prevBuffer[i] != 'H' && buffer[i] == 'H' && nextBuffer[i] == 'H') ||
+				   (prevBuffer[i] != 'I' && buffer[i] == 'I' && nextBuffer[i] == 'I')) {
+					tempNote.type |= RP_NOTE_TYPE_LONG_STT;
+				}
+				if((prevBuffer[i] == 'F' && buffer[i] == 'F' && nextBuffer[i] == 'F') || 
+				   (prevBuffer[i] == 'H' && buffer[i] == 'H' && nextBuffer[i] == 'H') ||
+				   (prevBuffer[i] == 'I' && buffer[i] == 'I' && nextBuffer[i] == 'I')) {
+					tempNote.type |= RP_NOTE_TYPE_LONG_MID;
+				}
+				if((prevBuffer[i] == 'F' && buffer[i] == 'F' && nextBuffer[i] != 'F') || 
+				   (prevBuffer[i] == 'H' && buffer[i] == 'H' && nextBuffer[i] != 'H') ||
+				   (prevBuffer[i] == 'I' && buffer[i] == 'I' && nextBuffer[i] != 'I')) {
+					tempNote.type |= RP_NOTE_TYPE_LONG_END;
+				}
+
+				enqueue(qt_ksh_note, tempNote);
+				if(chkNoteNum == 1) { pivotNode = qt_ksh_note->rear; }
+			}
+		}
+		order++;
+		// chkNoteNum = 0;
+		//
+		// I will parsing knov!
+		//
+
+		if(flag == 1) {
 			printf("measure %d is finished\n", measure);
 			measure++;
 			while(pivotNode != NULL) {
@@ -226,6 +236,7 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 			printf("pass pivot node\n");
 			order = 0;
 			chkNoteNum = 0;
+			flag = 0;
 		}
                 strcpy(prevBuffer, buffer);
                 strcpy(buffer, nextBuffer);
