@@ -21,6 +21,7 @@
 #include <esUtil.h>
 #include <rpUtil.h>
 #include <rpNote.h>
+#include <rpGpio.h>
 #include <kshLoader.h>
 #include <wiringPi.h>
 
@@ -30,6 +31,7 @@ typedef struct _user_data
    GLuint programObject;
    float temp;
    float measureBar;
+   int gpioStat;
    FILE* kshFile;
    KshInfo *ki;
    QType *qtNote;
@@ -38,7 +40,7 @@ typedef struct _user_data
 GLfloat vVertices[] = { -0.1f, -0.1f, 0.0f, 
                         -0.1f,  0.1f, 0.0f,
                         -0.3f, -0.1f, 0.0f,
-			               -0.3f,  0.1f, 0.0f };
+                        -0.3f,  0.1f, 0.0f };
 
 GLfloat vRpVertices[7][12] = { { -0.2f, -0.1f, 0.0f,  //BT-0
                                  -0.2f,  0.1f, 0.0f,
@@ -67,7 +69,32 @@ GLfloat vRpVertices[7][12] = { { -0.2f, -0.1f, 0.0f,  //BT-0
                                {  0.4f, -0.1f, 0.0f,  //FX-R
                                   0.4f,  0.1f, 0.0f,
                                   0.0f, -0.1f, 0.0f,
-                                  0.0f,  0.1f, 0.0f } };
+                                  0.0f,  0.1f, 0.0f }};
+
+GLfloat vGpioVertices[6][12] = { { -0.2f, -1.0f, -0.01f,  //BT-0
+                                   -0.2f,  0.0f, -0.01f,
+                                   -0.4f, -1.0f, -0.01f,
+                                   -0.4f,  0.0f, -0.01f },
+                                 {  0.0f, -1.0f, -0.01f,  //BT-1
+                                    0.0f,  0.0f, -0.01f,
+                                   -0.2f, -1.0f, -0.01f,
+                                   -0.2f,  0.0f, -0.01f },
+                                 {  0.2f, -1.0f, -0.01f,  //BT-2
+                                    0.2f,  0.0f, -0.01f,
+                                    0.0f, -1.0f, -0.01f,
+                                    0.0f,  0.0f, -0.01f },
+                                 {  0.4f, -1.0f, -0.01f,  //BT-3
+                                    0.4f,  0.0f, -0.01f,
+                                    0.2f, -1.0f, -0.01f,
+                                    0.2f,  0.0f, -0.01f },
+                                 {  0.0f, -1.0f, -0.01f,  //FX-L
+                                    0.0f,  0.0f, -0.01f,
+                                   -0.4f, -1.0f, -0.01f,
+                                   -0.4f,  0.0f, -0.01f },
+                                 {  0.4f, -1.0f, -0.01f,  //FX-R
+                                    0.4f,  0.0f, -0.01f,
+                                    0.0f, -1.0f, -0.01f,
+                                    0.0f,  0.0f, -0.01f }};
  
 GLfloat tVertices[] = {  0.2f, -0.1f, 0.0f, 
                          0.2f,  0.1f, 0.0f,
@@ -210,6 +237,9 @@ int Init ( ESContext *esContext )
    getKshInfo(userData->kshFile, userData->ki);
    loadKshNote(userData->kshFile, userData->qtNote);
 
+   // GPIO Initialization
+   initPinMode();
+
    printf("Start registering es functions\n");
 
    glClearColor ( 0.0f, 0.0f, 0.0f, 0.0f );
@@ -221,7 +251,6 @@ int Init ( ESContext *esContext )
 //
 void Draw ( ESContext *esContext )
 {
-   int nCntMax;
    int i = 0;
    float lowNoteWidth = 0;
    float highNoteWidth = 0;
@@ -247,6 +276,7 @@ void Draw ( ESContext *esContext )
    */
    //==================
    
+   // Draw notes
    while(tempQNode->link != NULL) {
       for(i = 0; i <= 6; i++) {
          if(i != 4 && ((tempQNode->note.type & 0x0FFF) == (RP_NOTE_TYPE_BT_FIRST >> i))) {
@@ -288,9 +318,21 @@ void Draw ( ESContext *esContext )
             glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
          }
       }
-
       tempQNode = tempQNode->link;
    }
+
+   // Draw about input from GPIO
+   for(i = 9; i >= 4; i--) {
+      if( (userData->gpioStat & (0x01 << i)) >> i == 0x01 ) {
+         glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, vGpioVertices[9 - i] );
+         glEnableVertexAttribArray( 0 );
+         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
+      }
+   }
+
+   // LED Enable
+   setOutputGPIO(userData->gpioStat);
+
    /*
       vRpVertices[4][1] = -userData->measureBar + 0.001;
       vRpVertices[4][4] = -userData->measureBar - 0.001;
@@ -310,6 +352,7 @@ void Update ( ESContext *esContext, float deltaTime ) {
    //deltaTime = 120pbm(4/4 bit), userData->ki->t = bpm of song
    userData->temp += deltaTime * (userData->ki->t / 120.0);
    userData->measureBar += deltaTime * (userData->ki->t / 120.0);
+   userData->gpioStat = inputGPIOStat();
    if(userData->measureBar > 1.0) {
       userData->measureBar = -1.0;
    }

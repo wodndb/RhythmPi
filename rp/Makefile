@@ -20,11 +20,13 @@ COMMONSRC=../Libs/esShader.c    \
           ../Libs/esUtil.c      \
           ../Libs/rpUtil.c      \
           ../Libs/rpNote.c      \
-          ../Libs/kshLoader.c
+          ../Libs/kshLoader.c   \
+          ../Libs/rpGpio.c
 COMMONHRD=../Libs/esUtil.h      \
           ../Libs/rpUtil.h      \
           ../Libs/rpNote.h      \
-          ../Libs/kshLoader.h
+          ../Libs/kshLoader.h   \
+          ../Libs/rpGpio.h
 
 CH02SRC=main.c
 

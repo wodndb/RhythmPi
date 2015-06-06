@@ -103,4 +103,4 @@ void printGPIOStat(int prev_gpio_stat, int cur_gpio_stat);
 ///                             ROT_LEFT  : direction is left (ConterClockWise)
 int checkRotDirection(int prev_gpio_stat, int cur_gpio_stat, int fx_num);
 
-#ifndef //RP_GPIO_H
+#endif //RP_GPIO_H

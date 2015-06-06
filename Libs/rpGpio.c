@@ -153,7 +153,7 @@ void printGPIOStat(int prev_gpio_stat, int cur_gpio_stat) {
 	int fx2 = checkRotDirection(prev_gpio_stat, cur_gpio_stat, 2);
 
 	for (pin = 10; pin >= 0; pin--) {
-		printf("| %s ", (gpio_input_stat & (0x01 << pin)) >> pin == 0x01 ? "##" : "  ");
+		printf("| %s ", (cur_gpio_stat & (0x01 << pin)) >> pin == 0x01 ? "##" : "  ");
 		
 		if(fx1 == ROT_LEFT) {
 			printf("| ◀◀ ");
