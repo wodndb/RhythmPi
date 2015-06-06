@@ -160,11 +160,11 @@ int Init ( ESContext *esContext )
    GLbyte vShaderStr[] =
       "attribute vec4 vPosition;    \n"
       "attribute vec4 vColour;      \n"
-      "varying vec4 vFragmentColour; \n"
+      "varying vec4 vFragmentColour;     \n"
       "void main()                  \n"
       "{                            \n"
       "   gl_Position = vPosition;  \n"
-      "   vFragmentColour = vColour; \n"
+      "   vFragmentColour = vColour;\n"
       "}                            \n";
    
    GLbyte fShaderStr[] =  
@@ -174,14 +174,24 @@ int Init ( ESContext *esContext )
       "  gl_FragColor = vec4 ( 1.0, 1.0, 1.0, 1.0); \n"
       "}                                            \n";
 
+   GLbyte fGpioShaderStr[] =  
+      "precision mediump float;\n"\
+      "varying vec4 vFragmentColour;     \n"
+      "void main()                                  \n"
+      "{                                            \n"
+      "  gl_FragColor = vFragmentColour;\n"
+      "}                                            \n";
+
    GLuint vertexShader;
    GLuint fragmentShader;
+   GLuint gpioFragmentShader;   
    GLuint programObject;
    GLint linked;
 
    // Load the vertex/fragment shaders
    vertexShader = LoadShader ( GL_VERTEX_SHADER, vShaderStr );
    fragmentShader = LoadShader ( GL_FRAGMENT_SHADER, fShaderStr );
+   gpioFragmentShader = LoadShader ( GL_FRAGMENT_SHADER, fGpioShaderStr );   
 
    // Create the program object
    programObject = glCreateProgram ( );
@@ -191,9 +201,11 @@ int Init ( ESContext *esContext )
 
    glAttachShader ( programObject, vertexShader );
    glAttachShader ( programObject, fragmentShader );
+   glAttachShader ( programObject, gpioFragmentShader );
 
    // Bind vPosition to attribute 0   
    glBindAttribLocation ( programObject, 0, "vPosition" );
+   glBindAttribLocation ( programObject, 1, "vColour");
 
    // Link the program
    glLinkProgram ( programObject );
@@ -256,6 +268,13 @@ void Draw ( ESContext *esContext )
    float highNoteWidth = 0;
    UserData *userData = ( UserData* ) esContext->userData;
    QNode* tempQNode = NULL;
+   QNode* prevTempQNode = NULL;
+   
+   GLfloat cColours[] = {1.0f, 1.0f, 1.0f, 1.0f
+                         1.0f, 1.0f, 1.0f, 0.0f
+                         1.0f, 1.0f, 1.0f, 1.0f
+                         1.0f, 1.0f, 1.0f, 0.0f}
+   
    tempQNode = userData->qtNote->front;
 
    // Set the viewport
@@ -267,14 +286,50 @@ void Draw ( ESContext *esContext )
    // Use the program object
    glUseProgram ( userData->programObject );
 
-   // Load the vertex data
-   /*
-   glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vVertices );
-   glEnableVertexAttribArray ( 0 );
-
-   glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 );
-   */
    //==================
+   
+   // Judge notes : Input from GPIO
+   while(tempQNode->Link != NULL) {
+      if(((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
+            - userData->temp < -0.1)
+      {
+         for(i = 0; i <= 6; i++) {
+            if((tempQNode->note.type & 0x0FFF) & (RP_NOTE_TYPE_BT_FIRST >> i) != 0) {
+                  if( i < 4 && (userData->gpioStat >> 2) & (RP_NOTE_TYPE_BT_FIRST >> i) != 0) {
+                        dequeue(userData->qtNote, prevTempQNode);
+                        printf("pop note : button hit");
+                  }
+                  else if( i > 4 && (userData->gpioStat >> 3) & (RP_NOTE_TYPE_BT_FIRST >> i) != 0) {
+                        dequeue(userData->qtNote, prevTempQNode);
+                        printf("pop note : button hit");
+                  }
+            }
+         }
+         prevTempQNode = tempQNode;
+         tempQNode = tempQNode->link;
+      }
+      else {
+            // Init QNode and break;
+            tempQnode = userData->qtNote->front;
+            break;
+      }
+   }
+   
+   // Judge notes : Out of line
+   while(tempQNode->Link != NULL) {
+      if(((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
+            - userData->temp < - 1.9)
+      {
+            dequeue(userData->qtNote);
+            userData->qtNote->front;
+            printf("pop note : out of lines")
+      }
+      else {
+            // Init QNode
+            tempQnode = userData->qtNote->front;
+            break;
+      }
+   }
    
    // Draw notes
    while(tempQNode->link != NULL) {
@@ -326,7 +381,10 @@ void Draw ( ESContext *esContext )
       if( (userData->gpioStat & (0x01 << i)) >> i == 0x01 ) {
          glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, vGpioVertices[9 - i] );
          glEnableVertexAttribArray( 0 );
+         glVertexAttribPointer ( 1, 4, GL_FLOAT, GL_FALSE, 0, vColours );
+         glEnableVertexAttribArray ( 1 );
          glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
+         glDisableVertexAttribArray ( 0 );
       }
    }
 
@@ -375,6 +433,7 @@ int main ( int argc, char *argv[] )
    esRegisterDrawFunc ( &esContext, Draw );
    esRegisterUpdateFunc ( &esContext, Update );
 
+   // Fork for play music
    pid = fork();
 
    switch(pid) {
@@ -383,7 +442,7 @@ int main ( int argc, char *argv[] )
          printf("child process can't be created\n");
          return -1;
       }
-      case 0:
+      case 0:     // Play music
       {
          //system("omxplayer ../songs/ksm/homura/homura.ogg");
          execlp("omxplayer", "omxplayer", "../songs/ksm/homura/homura_lt_f.ogg");

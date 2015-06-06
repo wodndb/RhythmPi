@@ -136,6 +136,40 @@ RpNote dequeue(QType *q) {
 }
 
 ///
+// dequeue()
+//
+//    Delete element from Queue
+//
+RpNote dequeue(QType *q, QNode *node) {
+	QNode *temp;
+	RpNote note;
+
+	if(is_empty(q)) {
+		qError("Queue is empty!");
+	}
+	else if(node != NULL && q->front != node) {
+		temp = node;
+		note = temp->note;
+		node = node->link;
+		if(node == NULL) {
+			q->rear = node;
+		}
+		free(temp);
+		return note;
+	}
+	else {
+		temp = q->front;
+		note = temp->note;
+		q->front = q->front->link;
+		if(q->front == NULL) {
+			q->rear = NULL;
+		}
+		free(temp);
+		return note;
+	}
+}
+
+///
 // peek()
 //
 //    Peek element from Queue

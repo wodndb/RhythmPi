@@ -39,8 +39,8 @@
 #define RP_NOTE_TYPE_BT_THIRD   0x0200   // | | |#| | // 0b 0010 0000
 #define RP_NOTE_TYPE_BT_FOURTH  0x0100   // | | | |#| // 0b 0001 0000
 // Division Line between bt and fx, So 0x080 is jumped
-#define RP_NOTE_TYPE_FX_LEFT    0x0040   // |###| | | // 0b 0000 1000
-#define RP_NOTE_TYPE_FX_RIGHT   0x0020   // | | |###| // 0b 0000 0100
+#define RP_NOTE_TYPE_FX_LEFT    0x0040   // |###| | | // 0b 0000 0100
+#define RP_NOTE_TYPE_FX_RIGHT   0x0020   // | | |###| // 0b 0000 0010
 // Division Line between fx and knov, So 0x010 is jumped
                                          // +-+-+-+-+ // Line of judgement
                                          // |1|2|3|4| // Arrangement of BT-button
@@ -125,12 +125,20 @@ int is_full(QType *q);
 void enqueue(QType *q, RpNote note);
 
 //
-/// \brief Delete element from Queue
+/// \brief Delete element from Queue (front)
 //
 /// \param q         Queue structure
 //
 /// \return          RpNote that deleted from queue
-RpNote dequeue(QType *q);			
+RpNote dequeue(QType *q);
+
+//
+/// \brief Delete element from Queue (particular node)
+//
+/// \param q         Queue structure
+//
+/// \return          RpNote that deleted from queue
+RpNote dequeue(QType *q, QNode *node);
 
 //
 /// \brief Peek element from Queue
