@@ -56,6 +56,7 @@ typedef struct _note {
    int measure;   // music term.
    int order;     // order of note in a measure 
    int max;       // number of notes in a measure
+   int hitted;    // check is note hitted
 } RpNote;
 
 /// QNode is node of queue, that has note and next nodes address
@@ -82,7 +83,7 @@ typedef struct queueType {
 /// \param max       number of notes in a measure
 //
 /// \return          *RpNote that has allocated RpNote data
-RpNote* createNote(int type, int measure, int order, int max);
+RpNote* createNote(int type, int measure, int order, int max, int hitted);
 
 //
 /// \brief Print error message

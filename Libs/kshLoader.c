@@ -198,6 +198,7 @@ void loadKshNote(FILE* ksh_file_stream, QType *qt_ksh_note) {
 				tempNote.order = order;
 				tempNote.type = RP_NOTE_TYPE_BT_FIRST >> i;	//macro value is sequence
 				tempNote.measure = measure;
+				tempNote.hitted = 0;
 
 				//check type of long note
 				if((prevBuffer[i] != 'F' && buffer[i] == 'F' && nextBuffer[i] == 'F') || 

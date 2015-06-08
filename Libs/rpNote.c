@@ -43,6 +43,7 @@ RpNote* createNote(int type, int measure, int order, int max) {
 	tempNote->measure = measure;
 	tempNote->order = order;
 	tempNote->max = max;
+	tempNote->hitted = hitted;
 	return tempNote;
 }
 
