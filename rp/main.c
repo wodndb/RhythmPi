@@ -99,7 +99,7 @@ GLfloat vGpioVertices[6][12] = { { -0.2f, -1.0f, -0.01f,  //BT-0
 GLfloat tVertices[] = {  0.2f, -0.1f, 0.0f, 
                          0.2f,  0.1f, 0.0f,
                         -0.2f, -0.1f, 0.0f,
-			               -0.2f,  0.1f, 0.0f };
+			      -0.2f,  0.1f, 0.0f };
 
 ///
 // Create a shader object, load the shader source, and
@@ -293,17 +293,23 @@ void Draw ( ESContext *esContext )
       if(((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
             - userData->temp < -0.1)
       {
+         // Check note type
          for(i = 0; i <= 6; i++) {
             if(((tempQNode->note.type & 0x0FFF) & (RP_NOTE_TYPE_BT_FIRST >> i)) != 0) {
+                  // Check note is hitted : BT1 ~ BT4
                   if( i < 4 && ((userData->gpioStat) == (RP_NOTE_TYPE_BT_FIRST >> (i + 2)))) {
                         printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> i);
-                        dequeue_middle(userData->qtNote, prevTempQNode);
+                        dequeue_middle(userData->qtNote, prevTempQNode, tempQNode);
+                        tempQNode = prevTempQNode->link;
                         printf("pop note : button hit\n");
-                  }
+                        break;
+                  } // Check note is hitted : FX1, FX2
                   else if( i > 4 && ((userData->gpioStat) == (RP_NOTE_TYPE_BT_FIRST >> (i + 1)))) {
                         printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> i);
-                        dequeue_middle(userData->qtNote, prevTempQNode);
+                        dequeue_middle(userData->qtNote, prevTempQNode, tempQNode);
+                        tempQNode = prevTempQNode->link;
                         printf("pop note : button hit\n");
+                        break;
                   }
             }
          }
