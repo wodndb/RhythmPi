@@ -29,6 +29,21 @@ typedef struct _user_data
 {
    // Handle to a program object
    GLuint programObject;
+   
+   // Attribute locations
+   GLint  positionLoc;
+   GLint  texCoordLoc;
+
+   // Sampler location
+   GLint samplerLoc;
+
+   // Texture handle
+   GLuint textureId;
+
+   GLubyte *image;
+   int width, height;
+   
+   // wodndb data
    float temp;
    float measureBar;
    int prevGpioStat;
@@ -43,64 +58,151 @@ GLfloat vVertices[] = { -0.1f, -0.1f, 0.0f,
                         -0.3f, -0.1f, 0.0f,
                         -0.3f,  0.1f, 0.0f };
 
-GLfloat vRpVertices[7][12] = { { -0.2f, -0.1f, 0.0f,  //BT-0
-                                 -0.2f,  0.1f, 0.0f,
-                                 -0.4f, -0.1f, 0.0f,
-                                 -0.4f,  0.1f, 0.0f },
-                               {  0.0f, -0.1f, 0.0f,  //BT-1
-                                  0.0f,  0.1f, 0.0f,
-                                 -0.2f, -0.1f, 0.0f,
-                                 -0.2f,  0.1f, 0.0f },
-                               {  0.2f, -0.1f, 0.0f,  //BT-2
-                                  0.2f,  0.1f, 0.0f,
-                                  0.0f, -0.1f, 0.0f,
-                                  0.0f,  0.1f, 0.0f },
-                               {  0.4f, -0.1f, 0.0f,  //BT-3
-                                  0.4f,  0.1f, 0.0f,
-                                  0.2f, -0.1f, 0.0f,
-                                  0.2f,  0.1f, 0.0f },
-                               {  4.0f,  0.0f, 0.0f,  //blank
-                                  4.0f,  0.0f, 0.0f,
-                                 -4.0f,  0.0f, 0.0f,
-                                 -4.0f,  0.0f, 0.0f },
-                               {  0.0f, -0.1f, 0.0f,  //FX-L
-                                  0.0f,  0.1f, 0.0f,
-                                 -0.4f, -0.1f, 0.0f,
-                                 -0.4f,  0.1f, 0.0f },
-                               {  0.4f, -0.1f, 0.0f,  //FX-R
-                                  0.4f,  0.1f, 0.0f,
-                                  0.0f, -0.1f, 0.0f,
-                                  0.0f,  0.1f, 0.0f }};
+GLfloat vRpVertices[7][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
+                                0.0f,  1.0f,
+                               -0.4f, -0.1f, 0.0f,
+                                0.0f,  0.0f,
+                               -0.2f, -0.1f, 0.0f,
+                                1.0f,  0.0f,
+                               -0.2f,  0.1f, 0.0f
+                                1.0f,  1.0f       },
+                             { -0.2f,  0.1f, 0.0f,  //BT-1
+                                0.0f,  1.0f,
+                               -0.2f, -0.1f, 0.0f,
+                                0.0f,  0.0f,
+                                0.0f, -0.1f, 0.0f,
+                                1.0f,  0.0f,
+                                0.0f,  0.1f, 0.0f
+                                1.0f,  1.0f       },
+                             {  0.0f,  0.1f, 0.0f,  //BT-2
+                                0.0f,  1.0f,
+                                0.0f, -0.1f, 0.0f,
+                                0.0f,  0.0f,
+                                0.2f, -0.1f, 0.0f,
+                                1.0f,  0.0f,
+                                0.2f,  0.1f, 0.0f
+                                1.0f,  1.0f       },
+                             {  0.2f,  0.1f, 0.0f,  //BT-3
+                                0.0f,  1.0f,
+                                0.2f, -0.1f, 0.0f,
+                                0.0f,  0.0f,
+                                0.4f, -0.1f, 0.0f,
+                                1.0f,  0.0f,
+                                0.4f,  0.1f, 0.0f
+                                1.0f,  1.0f       },
+                             {  4.0f,  0.0f, 0.0f,  //blank
+                                0.0f,  1.0f,
+                                4.0f,  0.0f, 0.0f,
+                                0.0f,  0.0f,
+                               -4.0f,  0.0f, 0.0f,
+                                1.0f,  0.0f,
+                               -4.0f,  0.0f, 0.0f
+                                1.0f,  1.0f       },
+                             { -0.4f,  0.1f, 0.0f,  //FX-L
+                                0.0f,  1.0f,
+                               -0.4f, -0.1f, 0.0f,
+                                0.0f,  0.0f,
+                                0.0f, -0.1f, 0.0f,
+                                1.0f,  0.0f,
+                                0.0f,  0.1f, 0.0f
+                                1.0f,  1.0f       },
+                             {  0.0f,  0.1f, 0.0f,  //FX-R
+                                0.0f,  1.0f,
+                                0.0f, -0.1f, 0.0f,
+                                0.0f,  0.0f,
+                                0.4f, -0.1f, 0.0f,
+                                1.0f,  0.0f,
+                                0.4f,  0.1f, 0.0f 
+                                1.0f,  1.0f       }};
 
-GLfloat vGpioVertices[6][12] = { { -0.2f, -1.0f, -0.01f,  //BT-0
-                                   -0.2f,  0.0f, -0.01f,
-                                   -0.4f, -1.0f, -0.01f,
-                                   -0.4f,  0.0f, -0.01f },
-                                 {  0.0f, -1.0f, -0.01f,  //BT-1
-                                    0.0f,  0.0f, -0.01f,
-                                   -0.2f, -1.0f, -0.01f,
-                                   -0.2f,  0.0f, -0.01f },
-                                 {  0.2f, -1.0f, -0.01f,  //BT-2
-                                    0.2f,  0.0f, -0.01f,
-                                    0.0f, -1.0f, -0.01f,
-                                    0.0f,  0.0f, -0.01f },
-                                 {  0.4f, -1.0f, -0.01f,  //BT-3
-                                    0.4f,  0.0f, -0.01f,
-                                    0.2f, -1.0f, -0.01f,
-                                    0.2f,  0.0f, -0.01f },
-                                 {  0.0f, -1.0f, -0.01f,  //FX-L
-                                    0.0f,  0.0f, -0.01f,
-                                   -0.4f, -1.0f, -0.01f,
-                                   -0.4f,  0.0f, -0.01f },
-                                 {  0.4f, -1.0f, -0.01f,  //FX-R
-                                    0.4f,  0.0f, -0.01f,
-                                    0.0f, -1.0f, -0.01f,
-                                    0.0f,  0.0f, -0.01f }};
+GLfloat vGpioVertices[6][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
+                                  0.0f,  1.0f,
+                                 -0.4f, -0.1f, 0.0f,
+                                  0.0f,  0.0f,
+                                 -0.2f, -0.1f, 0.0f,
+                                  1.0f,  0.0f,
+                                 -0.2f,  0.1f, 0.0f 
+                                  1.0f,  1.0f       },
+                               { -0.2f,  0.1f, 0.0f,  //BT-1
+                                  0.0f,  1.0f,
+                                 -0.2f, -0.1f, 0.0f,
+                                  0.0f,  0.0f,
+                                  0.0f, -0.1f, 0.0f,
+                                  1.0f,  0.0f,
+                                  0.0f,  0.1f, 0.0f 
+                                  1.0f,  1.0f       },
+                               {  0.0f,  0.1f, 0.0f,  //BT-2
+                                  0.0f,  1.0f,
+                                  0.0f, -0.1f, 0.0f,
+                                  0.0f,  0.0f,
+                                  0.2f, -0.1f, 0.0f,
+                                  1.0f,  0.0f,
+                                  0.2f,  0.1f, 0.0f 
+                                  1.0f,  1.0f       },
+                               {  0.2f,  0.1f, 0.0f,  //BT-3
+                                  0.0f,  1.0f,
+                                  0.2f, -0.1f, 0.0f,
+                                  0.0f,  0.0f,
+                                  0.4f, -0.1f, 0.0f,
+                                  1.0f,  0.0f,
+                                  0.4f,  0.1f, 0.0f 
+                                  1.0f,  1.0f       },
+                               { -0.4f,  0.1f, 0.0f,  //FX-L
+                                  0.0f,  1.0f,
+                                 -0.4f, -0.1f, 0.0f,
+                                  0.0f,  0.0f,
+                                  0.0f, -0.1f, 0.0f,
+                                  1.0f,  0.0f,
+                                  0.0f,  0.1f, 0.0f 
+                                  1.0f,  1.0f       },
+                               {  0.0f,  0.1f, 0.0f,  //FX-R
+                                  0.0f,  1.0f,
+                                  0.0f, -0.1f, 0.0f,
+                                  0.0f,  0.0f,
+                                  0.4f, -0.1f, 0.0f,
+                                  1.0f,  0.0f,
+                                  0.4f,  0.1f, 0.0f 
+                                  1.0f,  1.0f       }};
  
 GLfloat tVertices[] = {  0.2f, -0.1f, 0.0f, 
                          0.2f,  0.1f, 0.0f,
                         -0.2f, -0.1f, 0.0f,
 			      -0.2f,  0.1f, 0.0f };
+
+///
+// Create a simple 2x2 texture image with four different colors
+//
+GLuint CreateSimpleTexture2D(ESContext *esContext)
+{
+   // Texture object handle
+   GLuint textureId;
+   UserData *userData = esContext->userData;
+   
+   GLubyte *pixels = userData->image;
+   userData->width = esContext->width;
+   userData->height = esContext->height;
+
+   // Use tightly packed data
+   glPixelStorei ( GL_UNPACK_ALIGNMENT, 1 );
+
+   // Generate a texture object
+   glGenTextures ( 1, &textureId );
+
+   // Bind the texture object
+   glBindTexture ( GL_TEXTURE_2D, textureId );
+
+   // Load the texture
+   glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGB, 
+		  userData->width, userData->height, 
+		  0, GL_RGB, GL_UNSIGNED_BYTE, pixels );
+
+   // Set the filtering mode
+   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+
+   return textureId;
+
+}
 
 ///
 // Create a shader object, load the shader source, and
@@ -159,71 +261,36 @@ int Init ( ESContext *esContext )
 
    UserData *userData = esContext->userData;
    GLbyte vShaderStr[] =
-      "attribute vec4 vPosition;    \n"
-      "attribute vec4 vColour;      \n"
-      "varying vec4 vFragmentColour;     \n"
+      "attribute vec4 a_position;   \n"
+      "attribute vec2 a_texCoord;   \n"
+      "varying vec2 v_texCoord;     \n"
       "void main()                  \n"
       "{                            \n"
-      "   gl_Position = vPosition;  \n"
-      "   vFragmentColour = vColour;\n"
+      "   gl_Position = a_position; \n"
+      "   v_texCoord = a_texCoord;  \n"
       "}                            \n";
    
    GLbyte fShaderStr[] =  
-      "precision mediump float;                     \n"
-      "void main()                                  \n"
-      "{                                            \n"
-      "  gl_FragColor = vec4 ( 1.0, 1.0, 1.0, 1.0); \n"
-      "}                                            \n";
+      "precision mediump float;                            \n"
+      "varying vec2 v_texCoord;                            \n"
+      "uniform sampler2D s_texture;                        \n"
+      "void main()                                         \n"
+      "{                                                   \n"
+      "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
+      "}                                                   \n";
 
-   GLuint vertexShader;
-   GLuint fragmentShader;
-   GLuint programObject;
-   GLint linked;
+   // Load the shaders and get a linked program object
+   userData->programObject = esLoadProgram ( vShaderStr, fShaderStr );
 
-   // Load the vertex/fragment shaders
-   vertexShader = LoadShader ( GL_VERTEX_SHADER, vShaderStr );
-   fragmentShader = LoadShader ( GL_FRAGMENT_SHADER, fShaderStr );
-
-   // Create the program object
-   programObject = glCreateProgram ( );
+   // Get the attribute locations
+   userData->positionLoc = glGetAttribLocation ( userData->programObject, "a_position" );
+   userData->texCoordLoc = glGetAttribLocation ( userData->programObject, "a_texCoord" );
    
-   if ( programObject == 0 )
-      return 0;
+   // Get the sampler location
+   userData->samplerLoc = glGetUniformLocation ( userData->programObject, "s_texture" );
 
-   glAttachShader ( programObject, vertexShader );
-   glAttachShader ( programObject, fragmentShader );
-
-   // Bind vPosition to attribute 0   
-   glBindAttribLocation ( programObject, 0, "vPosition" );
-
-   // Link the program
-   glLinkProgram ( programObject );
-
-   // Check the link status
-   glGetProgramiv ( programObject, GL_LINK_STATUS, &linked );
-
-   if ( !linked ) 
-   {
-      GLint infoLen = 0;
-
-      glGetProgramiv ( programObject, GL_INFO_LOG_LENGTH, &infoLen );
-      
-      if ( infoLen > 1 )
-      {
-         char* infoLog = malloc (sizeof(char) * infoLen );
-
-         glGetProgramInfoLog ( programObject, infoLen, NULL, infoLog );
-         esLogMessage ( "Error linking program:\n%s\n", infoLog );            
-         
-         free ( infoLog );
-      }
-
-      glDeleteProgram ( programObject );
-      return GL_FALSE;
-   }
-
-   // Store the program object
-   userData->programObject = programObject;
+   // Load the texture
+   userData->textureId = CreateSimpleTexture2D (esContext);
 
    //getKshData
    userData->ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
@@ -259,10 +326,7 @@ void Draw ( ESContext *esContext )
    UserData *userData = ( UserData* ) esContext->userData;
    QNode* tempQNode = NULL;
    
-   GLfloat vColours[] = {1.0f, 1.0f, 0.0f, 1.0f,
-                         1.0f, 1.0f, 0.0f, 0.0f,
-                         1.0f, 1.0f, 0.0f, 1.0f,
-                         1.0f, 1.0f, 0.0f, 0.0f };
+   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
    
    tempQNode = userData->qtNote->front;
 
@@ -374,12 +438,12 @@ void Draw ( ESContext *esContext )
 
             vRpVertices[i][1] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
                                 - userData->temp + highNoteWidth;
-            vRpVertices[i][4] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
+            vRpVertices[i][6] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
                                 - userData->temp - lowNoteWidth;
-            vRpVertices[i][7] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
-                                - userData->temp + highNoteWidth;
-            vRpVertices[i][10] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
-                                 - userData->temp - lowNoteWidth;
+            vRpVertices[i][11] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
+                                - userData->temp - lowNoteWidth;
+            vRpVertices[i][16] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
+                                 - userData->temp + highNoteWidth;
  
 
             glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vRpVertices[i] );
@@ -402,16 +466,6 @@ void Draw ( ESContext *esContext )
    // LED Enable
    setOutputGPIO(userData->gpioStat);
 
-   /*
-      vRpVertices[4][1] = -userData->measureBar + 0.001;
-      vRpVertices[4][4] = -userData->measureBar - 0.001;
-      vRpVertices[4][7] = -userData->measureBar + 0.001;
-      vRpVertices[4][10] = -userData->measureBar - 0.001;
-
-      glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vRpVertices[4] );
-      glEnableVertexAttribArray( 0 );
-      glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-   */
 }
 
 void Update ( ESContext *esContext, float deltaTime ) {
@@ -432,6 +486,20 @@ int main ( int argc, char *argv[] )
    ESContext esContext;
    UserData  userData;
    pid_t pid;
+   
+   int width, height;
+   GLubyte *image;
+
+   image = esLoadTGA("jan.tga", &width, &height);
+   if (image == NULL) {
+       fprintf(stderr, "No such image\n");
+       exit(1);
+   }
+   printf("Width %d height %d\n", width, height);
+   
+   userData.image = image;
+   userData.width = width;
+   userData.height = height;
 
    esInitContext ( &esContext );
    esContext.userData = &userData;
