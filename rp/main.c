@@ -288,7 +288,10 @@ void Draw ( ESContext *esContext )
 
    //==================
    
+   printf(".");
+
    // Judge notes : Input from GPIO
+   /*
    while(tempQNode->link != NULL) {
       if(((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
             - userData->temp < -0.1)
@@ -298,23 +301,26 @@ void Draw ( ESContext *esContext )
             if(((tempQNode->note.type & 0x0FFF) & (RP_NOTE_TYPE_BT_FIRST >> i)) != 0) {
                   // Check note is hitted : BT1 ~ BT4
                   if( i < 4 && ((userData->gpioStat) == (RP_NOTE_TYPE_BT_FIRST >> (i + 2)))) {
-                        printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> i);
-                        dequeue_middle(userData->qtNote, prevTempQNode, tempQNode);
-                        tempQNode = prevTempQNode->link;
+                        printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> (i + 2));
+                        dequeue_middle(userData->qtNote, prevTempQNode, prevTempQNode->link);
                         printf("pop note : button hit\n");
-                        break;
+			break;
                   } // Check note is hitted : FX1, FX2
                   else if( i > 4 && ((userData->gpioStat) == (RP_NOTE_TYPE_BT_FIRST >> (i + 1)))) {
-                        printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> i);
-                        dequeue_middle(userData->qtNote, prevTempQNode, tempQNode);
-                        tempQNode = prevTempQNode->link;
+                        printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> (i + 1));
+                        dequeue_middle(userData->qtNote, prevTempQNode, prevTempQNode->link);
                         printf("pop note : button hit\n");
-                        break;
+			break;
                   }
             }
          }
-         prevTempQNode = tempQNode;
-         tempQNode = tempQNode->link;
+         if(i > 6) {
+            prevTempQNode = tempQNode;
+            tempQNode = tempQNode->link;
+         }
+         else {
+            tempQNode = tempQNode->link;
+         }
       }
       else {
             // Init QNode and break;
@@ -323,6 +329,7 @@ void Draw ( ESContext *esContext )
             break;
       }
    }
+   */
    
    // Judge notes : Out of line
    while(tempQNode->link != NULL) {

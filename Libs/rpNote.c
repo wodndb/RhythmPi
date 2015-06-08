@@ -142,31 +142,37 @@ RpNote dequeue(QType *q) {
 //    Delete element from Queue
 //
 RpNote dequeue_middle(QType *q, QNode *pnode, QNode *rnode) {
-	QNode *temp = rnode;
+	QNode *temp;
 	RpNote note;
 
 	if(is_empty(q)) {
 		qError("Queue is empty!");
 	}
 	else if(pnode != NULL) {
-		note = temp->note;
-		pnode->link = temp->link;
+		printf("dequeue middle start\n");
+		note = rnode->note;
+		pnode->link = rnode->link;
+		rnode->link = NULL;
 		if(pnode->link == NULL) {
 			q->rear = pnode;
 		}
-		free(temp);
-		temp = NULL;
+		free(rnode);
+		rnode = NULL;
+		printf("dequeue middle\n");
 		return note;
 	}
 	else {
+		printf("dequeue first start\n");
 		temp = q->front;
 		note = temp->note;
 		q->front = q->front->link;
+		temp->link = NULL;
 		if(q->front == NULL) {
 			q->rear = NULL;
 		}
 		free(temp);
 		temp = NULL;
+		printf("dequeue first\n");
 		return note;
 	}
 }
