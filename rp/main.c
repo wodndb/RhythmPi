@@ -270,10 +270,10 @@ void Draw ( ESContext *esContext )
    QNode* tempQNode = NULL;
    QNode* prevTempQNode = NULL;
    
-   GLfloat cColours[] = {1.0f, 1.0f, 1.0f, 1.0f
-                         1.0f, 1.0f, 1.0f, 0.0f
-                         1.0f, 1.0f, 1.0f, 1.0f
-                         1.0f, 1.0f, 1.0f, 0.0f}
+   GLfloat vColours[] = {1.0f, 1.0f, 0.0f, 1.0f,
+                         1.0f, 1.0f, 0.0f, 0.0f,
+                         1.0f, 1.0f, 0.0f, 1.0f,
+                         1.0f, 1.0f, 0.0f, 0.0f };
    
    tempQNode = userData->qtNote->front;
 
@@ -289,19 +289,21 @@ void Draw ( ESContext *esContext )
    //==================
    
    // Judge notes : Input from GPIO
-   while(tempQNode->Link != NULL) {
+   while(tempQNode->link != NULL) {
       if(((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
             - userData->temp < -0.1)
       {
          for(i = 0; i <= 6; i++) {
-            if((tempQNode->note.type & 0x0FFF) & (RP_NOTE_TYPE_BT_FIRST >> i) != 0) {
-                  if( i < 4 && (userData->gpioStat >> 2) & (RP_NOTE_TYPE_BT_FIRST >> i) != 0) {
-                        dequeue(userData->qtNote, prevTempQNode);
-                        printf("pop note : button hit");
+            if(((tempQNode->note.type & 0x0FFF) & (RP_NOTE_TYPE_BT_FIRST >> i)) != 0) {
+                  if( i < 4 && ((userData->gpioStat) == (RP_NOTE_TYPE_BT_FIRST >> (i + 2)))) {
+                        printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> i);
+                        dequeue_middle(userData->qtNote, prevTempQNode);
+                        printf("pop note : button hit\n");
                   }
-                  else if( i > 4 && (userData->gpioStat >> 3) & (RP_NOTE_TYPE_BT_FIRST >> i) != 0) {
-                        dequeue(userData->qtNote, prevTempQNode);
-                        printf("pop note : button hit");
+                  else if( i > 4 && ((userData->gpioStat) == (RP_NOTE_TYPE_BT_FIRST >> (i + 1)))) {
+                        printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> i);
+                        dequeue_middle(userData->qtNote, prevTempQNode);
+                        printf("pop note : button hit\n");
                   }
             }
          }
@@ -310,23 +312,24 @@ void Draw ( ESContext *esContext )
       }
       else {
             // Init QNode and break;
-            tempQnode = userData->qtNote->front;
+            tempQNode = userData->qtNote->front;
+            prevTempQNode = NULL;
             break;
       }
    }
    
    // Judge notes : Out of line
-   while(tempQNode->Link != NULL) {
+   while(tempQNode->link != NULL) {
       if(((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
             - userData->temp < - 1.9)
       {
             dequeue(userData->qtNote);
-            userData->qtNote->front;
-            printf("pop note : out of lines")
+            tempQNode = userData->qtNote->front;
+            printf("pop note : out of lines\n");
       }
       else {
             // Init QNode
-            tempQnode = userData->qtNote->front;
+            tempQNode = userData->qtNote->front;
             break;
       }
    }
@@ -383,8 +386,9 @@ void Draw ( ESContext *esContext )
          glEnableVertexAttribArray( 0 );
          glVertexAttribPointer ( 1, 4, GL_FLOAT, GL_FALSE, 0, vColours );
          glEnableVertexAttribArray ( 1 );
+
          glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-         glDisableVertexAttribArray ( 0 );
+         //glDisableVertexAttribArray ( 1 );
       }
    }
 

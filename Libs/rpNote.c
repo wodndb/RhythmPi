@@ -131,6 +131,7 @@ RpNote dequeue(QType *q) {
 			q->rear = NULL;
 		}
 		free(temp);
+		temp = NULL;
 		return note;
 	}
 }
@@ -140,7 +141,7 @@ RpNote dequeue(QType *q) {
 //
 //    Delete element from Queue
 //
-RpNote dequeue(QType *q, QNode *node) {
+RpNote dequeue_middle(QType *q, QNode *node) {
 	QNode *temp;
 	RpNote note;
 
@@ -155,6 +156,7 @@ RpNote dequeue(QType *q, QNode *node) {
 			q->rear = node;
 		}
 		free(temp);
+		temp = NULL;
 		return note;
 	}
 	else {
@@ -165,6 +167,7 @@ RpNote dequeue(QType *q, QNode *node) {
 			q->rear = NULL;
 		}
 		free(temp);
+		temp = NULL;
 		return note;
 	}
 }

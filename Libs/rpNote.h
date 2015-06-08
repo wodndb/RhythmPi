@@ -138,7 +138,7 @@ RpNote dequeue(QType *q);
 /// \param q         Queue structure
 //
 /// \return          RpNote that deleted from queue
-RpNote dequeue(QType *q, QNode *node);
+RpNote dequeue_middle(QType *q, QNode *node);
 
 //
 /// \brief Peek element from Queue
