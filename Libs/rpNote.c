@@ -37,7 +37,7 @@
 //
 //    Creates a note by allocate RpNote struct.
 //
-RpNote* createNote(int type, int measure, int order, int max) {
+RpNote* createNote(int type, int measure, int order, int max, int hitted) {
 	RpNote* tempNote = (RpNote*)malloc(1 * sizeof(RpNote));
 	tempNote->type = type;
 	tempNote->measure = measure;

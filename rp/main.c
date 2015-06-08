@@ -31,6 +31,7 @@ typedef struct _user_data
    GLuint programObject;
    float temp;
    float measureBar;
+   int prevGpioStat;
    int gpioStat;
    FILE* kshFile;
    KshInfo *ki;
@@ -174,24 +175,14 @@ int Init ( ESContext *esContext )
       "  gl_FragColor = vec4 ( 1.0, 1.0, 1.0, 1.0); \n"
       "}                                            \n";
 
-   GLbyte fGpioShaderStr[] =  
-      "precision mediump float;\n"\
-      "varying vec4 vFragmentColour;     \n"
-      "void main()                                  \n"
-      "{                                            \n"
-      "  gl_FragColor = vFragmentColour;\n"
-      "}                                            \n";
-
    GLuint vertexShader;
    GLuint fragmentShader;
-   GLuint gpioFragmentShader;   
    GLuint programObject;
    GLint linked;
 
    // Load the vertex/fragment shaders
    vertexShader = LoadShader ( GL_VERTEX_SHADER, vShaderStr );
    fragmentShader = LoadShader ( GL_FRAGMENT_SHADER, fShaderStr );
-   gpioFragmentShader = LoadShader ( GL_FRAGMENT_SHADER, fGpioShaderStr );   
 
    // Create the program object
    programObject = glCreateProgram ( );
@@ -201,11 +192,9 @@ int Init ( ESContext *esContext )
 
    glAttachShader ( programObject, vertexShader );
    glAttachShader ( programObject, fragmentShader );
-   glAttachShader ( programObject, gpioFragmentShader );
 
    // Bind vPosition to attribute 0   
    glBindAttribLocation ( programObject, 0, "vPosition" );
-   glBindAttribLocation ( programObject, 1, "vColour");
 
    // Link the program
    glLinkProgram ( programObject );
@@ -264,6 +253,7 @@ int Init ( ESContext *esContext )
 void Draw ( ESContext *esContext )
 {
    int i = 0;
+   int hittedGpioStat = 0x00;
    float lowNoteWidth = 0;
    float highNoteWidth = 0;
    UserData *userData = ( UserData* ) esContext->userData;
@@ -287,32 +277,50 @@ void Draw ( ESContext *esContext )
 
    //==================
    
-   printf(".");
+   //printf(".");
 
    // Judge notes : Input from GPIO
    while(tempQNode->link != NULL) {
       if(((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
             - userData->temp < -0.1)
       {
-         // Check note type
-         for(i = 0; i <= 6; i++) {
-            if(((tempQNode->note.type & 0x0FFF) & (RP_NOTE_TYPE_BT_FIRST >> i)) != 0) {
-                  // Check note is hitted : BT1 ~ BT4
-                  if( i < 4 && ((userData->gpioStat) == (RP_NOTE_TYPE_BT_FIRST >> (i + 2)))) {
-                        printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> (i + 2));
-                        tempQNode->hitted = 1;
-                        printf("button hit\n");
-			break;
-                  } // Check note is hitted : FX1, FX2
-                  else if( i > 4 && ((userData->gpioStat) == (RP_NOTE_TYPE_BT_FIRST >> (i + 1)))) {
-                        printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> (i + 1));
-                        tempQNode->hitted = 1;
-                        printf("button hit\n");
-			break;
-                  }
+         if(tempQNode->note.hitted != 1) {
+            // Check note type
+            for(i = 0; i <= 6; i++) {
+               if(((tempQNode->note.type & 0x0FFF) & (RP_NOTE_TYPE_BT_FIRST >> i)) != 0) {
+                     // Check note is hitted : BT1 ~ BT4
+                     if( (i < 4) && ((userData->gpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 2))) != 0)
+                     && ((userData->prevGpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 2))) == 0)
+                     && ((hittedGpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 2))) == 0) ) {
+                           printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> (i + 2));
+                           hittedGpioStat |= (RP_NOTE_TYPE_BT_FIRST >> (i + 2));
+                           if(tempQNode->note.type & 0xF000 != 0) {
+                              tempQNode->note.hitted = 0x02;
+                           }
+                           else {
+                              tempQNode->note.hitted = 0x01;
+                           }
+                           printf("button hit\n");
+                           break;
+                     } // Check note is hitted : FX1, FX2
+                     else if( (i > 4) && ((userData->gpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 1))) != 0)
+                     && ((userData->prevGpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 1))) == 0)
+                     && ((hittedGpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 1))) == 0) ) {
+                           printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> (i + 1));
+                           hittedGpioStat |= (RP_NOTE_TYPE_BT_FIRST >> (i + 1));
+                           if(tempQNode->note.type & 0xF000 != 0) {
+                              tempQNode->note.hitted = 0x02;
+                           }
+                           else {
+                              tempQNode->note.hitted = 0x01;
+                           }
+                           printf("button hit\n");
+	                   break;
+                     }
+               }
             }
          }
-      tempQNode = tempQNode->link;
+         tempQNode = tempQNode->link;
       }
       else {
             // Init QNode and break;
@@ -340,7 +348,7 @@ void Draw ( ESContext *esContext )
    // Draw notes
    while(tempQNode->link != NULL) {
       for(i = 0; i <= 6; i++) {
-         if((i != 4) && ((tempQNode->note.type & 0x0FFF) == (RP_NOTE_TYPE_BT_FIRST >> i)) && (tempQNode->hitted == 0) {
+         if((i != 4) && ((tempQNode->note.type & 0x0FFF) == (RP_NOTE_TYPE_BT_FIRST >> i)) && (tempQNode->note.hitted != 1)) {
             //If note is type of long note : start
             if((tempQNode->note.type & RP_NOTE_TYPE_LONG_STT) != 0) {
                lowNoteWidth = 0.025;
@@ -387,11 +395,7 @@ void Draw ( ESContext *esContext )
       if( (userData->gpioStat & (0x01 << i)) >> i == 0x01 ) {
          glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, vGpioVertices[9 - i] );
          glEnableVertexAttribArray( 0 );
-         glVertexAttribPointer ( 1, 4, GL_FLOAT, GL_FALSE, 0, vColours );
-         glEnableVertexAttribArray ( 1 );
-
          glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-         //glDisableVertexAttribArray ( 1 );
       }
    }
 
@@ -411,12 +415,12 @@ void Draw ( ESContext *esContext )
 }
 
 void Update ( ESContext *esContext, float deltaTime ) {
-   int i;
    UserData *userData = ( UserData* ) esContext->userData;
    
    //deltaTime = 120pbm(4/4 bit), userData->ki->t = bpm of song
    userData->temp += deltaTime * (userData->ki->t / 120.0);
    userData->measureBar += deltaTime * (userData->ki->t / 120.0);
+   userData->prevGpioStat = userData->gpioStat;
    userData->gpioStat = inputGPIOStat();
    if(userData->measureBar > 1.0) {
       userData->measureBar = -1.0;
