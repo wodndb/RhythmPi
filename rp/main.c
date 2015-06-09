@@ -24,6 +24,8 @@
 #include <rpGpio.h>
 #include <kshLoader.h>
 #include <wiringPi.h>
+#include <VG/openvb.h>
+#include <VG/vgu.h>
 
 typedef struct _user_data
 {
