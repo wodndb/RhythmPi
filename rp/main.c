@@ -235,7 +235,7 @@ GLuint CreateSimpleTexture2D(ESContext *esContext, int imageIndex)
 {
    // Texture object handle
    GLuint textureId;
-   UserData *userData = (UserData*) esContext->userData;
+   UserData *userData = esContext->userData;
    
    GLubyte *pixels = userData->image[imageIndex];
 
@@ -254,7 +254,7 @@ GLuint CreateSimpleTexture2D(ESContext *esContext, int imageIndex)
    // Load the texture
    glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, 
 		  userData->width[imageIndex], userData->height[imageIndex], 
-		  0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, pixels );
+		  0, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
 
 
    // Set the filtering mode
@@ -354,16 +354,12 @@ int Init ( ESContext *esContext )
 
    for(i = 0; i < IMG_MAX_NUM; i++) {
          printf("load image : %s\n", imageName[i]);
-         image = esLoadTGA(imageName[i], &width, &height);
-         if (image == NULL) {
+         userData->image[i] = esLoadTGA(imageName[i], &userData->width[i], &userData->height[i]);
+         if (userData->image[i] == NULL) {
              fprintf(stderr, "No such image\n");
              exit(1);
          }
-         printf("Width %d height %d\n", width, height);
-         
-         userData->image[i] = image;
-         userData->width[i] = width;
-         userData->height[i] = height;
+         printf("Width %d height %d\n", userData->width[i], userData->height[i]);
       
          printf("Load the shaders and get a linked program object\n");
       
