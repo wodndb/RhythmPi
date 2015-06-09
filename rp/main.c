@@ -28,20 +28,20 @@
 typedef struct _user_data
 {
    // Handle to a program object
-   GLuint programObject;
+   GLuint programObject[2];
    
    // Attribute locations
-   GLint  positionLoc;
-   GLint  texCoordLoc;
+   GLint  positionLoc[2];
+   GLint  texCoordLoc[2];
 
    // Sampler location
-   GLint samplerLoc;
+   GLint samplerLoc[2];
 
    // Texture handle
-   GLuint textureId;
+   GLuint textureId[2];
 
-   char *image;
-   int width, height;
+   char *image[2];
+   int width[2], height[2];
    
    // wodndb data
    float temp;
@@ -172,13 +172,13 @@ GLfloat tVertices[] = {  0.2f, -0.1f, 0.0f,
 ///
 // Create a simple 2x2 texture image with four different colors
 //
-GLuint CreateSimpleTexture2D(ESContext *esContext)
+GLuint CreateSimpleTexture2D(ESContext *esContext, int imageIndex)
 {
    // Texture object handle
    GLuint textureId;
    UserData *userData = (UserData*) esContext->userData;
    
-   char *pixels = userData->image;
+   char *pixels = userData->image[imageIndex];
 
    printf("Create Simple Texture 2D\n");
 
@@ -193,7 +193,7 @@ GLuint CreateSimpleTexture2D(ESContext *esContext)
 
    // Load the texture
    glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, 
-		  userData->width, userData->height, 
+		  userData->width[imageIndex], userData->height[imageIndex], 
 		  0, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
 
    // Set the filtering mode
@@ -201,7 +201,6 @@ GLuint CreateSimpleTexture2D(ESContext *esContext)
    glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 
    return textureId;
-
 }
 
 ///
@@ -259,6 +258,7 @@ int Init ( ESContext *esContext )
 {
    int width, height;
    char* image;
+   char* imageName = {"jan.tga", "gpioinput.tga"};
    //esContext->userData = malloc(sizeof(UserData));
 
    UserData *userData = esContext->userData;
@@ -281,36 +281,37 @@ int Init ( ESContext *esContext )
       "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
       "}                                                   \n";
 
-
-   image = esLoadTGA("jan.tga", &width, &height);
-   if (image == NULL) {
-       fprintf(stderr, "No such image\n");
-       exit(1);
+   for(i = 0; i < 2; i++) {
+         image = esLoadTGA(imageName[i], &width, &height);
+         if (image == NULL) {
+             fprintf(stderr, "No such image\n");
+             exit(1);
+         }
+         printf("Width %d height %d\n", width, height);
+         
+         userData->image[i] = image;
+         userData->width[i] = width;
+         userData->height[i] = height;
+      
+         printf("Load the shaders and get a linked program object\n");
+      
+         // Load the shaders and get a linked program object
+         userData->programObject[i] = esLoadProgram ( vShaderStr, fShaderStr );
+      
+         // Get the attribute locations
+         userData->positionLoc[i] = glGetAttribLocation ( userData->programObject[i], "a_position" );
+         userData->texCoordLoc[i] = glGetAttribLocation ( userData->programObject[i], "a_texCoord" );
+      
+         printf("get sampler location\n");
+         
+         // Get the sampler location
+         userData->samplerLoc[i] = glGetUniformLocation ( userData->programObject[i], "s_texture" );
+      
+         printf("load texture\n");
+      
+         // Load the texture
+         userData->textureId[i] = CreateSimpleTexture2D (esContext);
    }
-   printf("Width %d height %d\n", width, height);
-   
-   userData->image = image;
-   userData->width = width;
-   userData->height = height;
-
-   printf("Load the shaders and get a linked program object\n");
-
-   // Load the shaders and get a linked program object
-   userData->programObject = esLoadProgram ( vShaderStr, fShaderStr );
-
-   // Get the attribute locations
-   userData->positionLoc = glGetAttribLocation ( userData->programObject, "a_position" );
-   userData->texCoordLoc = glGetAttribLocation ( userData->programObject, "a_texCoord" );
-
-   printf("get sampler location\n");
-   
-   // Get the sampler location
-   userData->samplerLoc = glGetUniformLocation ( userData->programObject, "s_texture" );
-
-   printf("load texture\n");
-
-   // Load the texture
-   userData->textureId = CreateSimpleTexture2D (esContext);
 
    printf("Load ksh data\n");
 
@@ -359,7 +360,7 @@ void Draw ( ESContext *esContext )
    glClear ( GL_COLOR_BUFFER_BIT );
 
    // Use the program object
-   glUseProgram ( userData->programObject );
+   glUseProgram ( userData->programObject[0] );
 
    //==================
    
@@ -475,15 +476,15 @@ void Draw ( ESContext *esContext )
             glVertexAttribPointer ( userData->texCoordLoc, 2, GL_FLOAT,
                                     GL_FALSE, 5 * sizeof(GLfloat), &vRpVertices[i][3] );
 
-            glEnableVertexAttribArray( userData->positionLoc );
-            glEnableVertexAttribArray( userData->texCoordLoc );
+            glEnableVertexAttribArray( userData->positionLoc[0] );
+            glEnableVertexAttribArray( userData->texCoordLoc[0] );
 
             // Bind the texture
             glActiveTexture ( GL_TEXTURE0 );
-            glBindTexture ( GL_TEXTURE_2D, userData->textureId );
+            glBindTexture ( GL_TEXTURE_2D, userData->textureId[0] );
 
             // Set the sampler texture unit to 0
-            glUniform1i ( userData->samplerLoc, 0 );
+            glUniform1i ( userData->samplerLoc[0], 0 );
          
             glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
          }
@@ -505,15 +506,15 @@ void Draw ( ESContext *esContext )
          glVertexAttribPointer ( userData->texCoordLoc, 2, GL_FLOAT,
                                  GL_FALSE, 5 * sizeof(GLfloat), &vGpioVertices[9 - i][3] );
       
-         glEnableVertexAttribArray ( userData->positionLoc );
-         glEnableVertexAttribArray ( userData->texCoordLoc );
+         glEnableVertexAttribArray ( userData->positionLoc[1] );
+         glEnableVertexAttribArray ( userData->texCoordLoc[1] );
       
          // Bind the texture
          glActiveTexture ( GL_TEXTURE0 );
-         glBindTexture ( GL_TEXTURE_2D, userData->textureId );
+         glBindTexture ( GL_TEXTURE_2D, userData->textureId[1] );
       
          // Set the sampler texture unit to 0
-         glUniform1i ( userData->samplerLoc, 0 );
+         glUniform1i ( userData->samplerLoc[1], 0 );
       
          glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
       }
