@@ -259,7 +259,7 @@ int Init ( ESContext *esContext )
    int i;
    int width, height;
    char* image;
-   char* imageName[] = {"jan.tga", "gpioinput.tga"};
+   char imageName[2][] = {"jan.tga", "gpioinput.tga"};
    //esContext->userData = malloc(sizeof(UserData));
 
    UserData *userData = esContext->userData;
@@ -283,6 +283,7 @@ int Init ( ESContext *esContext )
       "}                                                   \n";
 
    for(i = 0; i < 2; i++) {
+         printf("load image : %s\n", imageName[i]);
          image = esLoadTGA(imageName[i], &width, &height);
          if (image == NULL) {
              fprintf(stderr, "No such image\n");
