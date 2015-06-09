@@ -58,13 +58,13 @@ GLfloat vVertices[] = { -0.1f, -0.1f, 0.0f,
                         -0.3f, -0.1f, 0.0f,
                         -0.3f,  0.1f, 0.0f };
 
-GLfloat vRpVertices[7][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
+GLfloat vRpVertices[7][20] ={{ -0.4f,  0.1f, 0.0f,  //BT-0
                                 0.0f,  1.0f,
                                -0.4f, -0.1f, 0.0f,
                                 0.0f,  0.0f,
                                -0.2f, -0.1f, 0.0f,
                                 1.0f,  0.0f,
-                               -0.2f,  0.1f, 0.0f
+                               -0.2f,  0.1f, 0.0f,
                                 1.0f,  1.0f       },
                              { -0.2f,  0.1f, 0.0f,  //BT-1
                                 0.0f,  1.0f,
@@ -72,7 +72,7 @@ GLfloat vRpVertices[7][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
                                 0.0f,  0.0f,
                                 0.0f, -0.1f, 0.0f,
                                 1.0f,  0.0f,
-                                0.0f,  0.1f, 0.0f
+                                0.0f,  0.1f, 0.0f,
                                 1.0f,  1.0f       },
                              {  0.0f,  0.1f, 0.0f,  //BT-2
                                 0.0f,  1.0f,
@@ -80,7 +80,7 @@ GLfloat vRpVertices[7][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
                                 0.0f,  0.0f,
                                 0.2f, -0.1f, 0.0f,
                                 1.0f,  0.0f,
-                                0.2f,  0.1f, 0.0f
+                                0.2f,  0.1f, 0.0f,
                                 1.0f,  1.0f       },
                              {  0.2f,  0.1f, 0.0f,  //BT-3
                                 0.0f,  1.0f,
@@ -88,7 +88,7 @@ GLfloat vRpVertices[7][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
                                 0.0f,  0.0f,
                                 0.4f, -0.1f, 0.0f,
                                 1.0f,  0.0f,
-                                0.4f,  0.1f, 0.0f
+                                0.4f,  0.1f, 0.0f,
                                 1.0f,  1.0f       },
                              {  4.0f,  0.0f, 0.0f,  //blank
                                 0.0f,  1.0f,
@@ -96,7 +96,7 @@ GLfloat vRpVertices[7][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
                                 0.0f,  0.0f,
                                -4.0f,  0.0f, 0.0f,
                                 1.0f,  0.0f,
-                               -4.0f,  0.0f, 0.0f
+                               -4.0f,  0.0f, 0.0f,
                                 1.0f,  1.0f       },
                              { -0.4f,  0.1f, 0.0f,  //FX-L
                                 0.0f,  1.0f,
@@ -104,7 +104,7 @@ GLfloat vRpVertices[7][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
                                 0.0f,  0.0f,
                                 0.0f, -0.1f, 0.0f,
                                 1.0f,  0.0f,
-                                0.0f,  0.1f, 0.0f
+                                0.0f,  0.1f, 0.0f,
                                 1.0f,  1.0f       },
                              {  0.0f,  0.1f, 0.0f,  //FX-R
                                 0.0f,  1.0f,
@@ -112,16 +112,16 @@ GLfloat vRpVertices[7][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
                                 0.0f,  0.0f,
                                 0.4f, -0.1f, 0.0f,
                                 1.0f,  0.0f,
-                                0.4f,  0.1f, 0.0f 
-                                1.0f,  1.0f       }};
+                                0.4f,  0.1f, 0.0f,
+                                1.0f,  1.0f       } };
 
-GLfloat vGpioVertices[6][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
+GLfloat vGpioVertices[6][20] ={{ -0.4f,  0.1f, 0.0f,  //BT-0
                                   0.0f,  1.0f,
                                  -0.4f, -0.1f, 0.0f,
                                   0.0f,  0.0f,
                                  -0.2f, -0.1f, 0.0f,
                                   1.0f,  0.0f,
-                                 -0.2f,  0.1f, 0.0f 
+                                 -0.2f,  0.1f, 0.0f, 
                                   1.0f,  1.0f       },
                                { -0.2f,  0.1f, 0.0f,  //BT-1
                                   0.0f,  1.0f,
@@ -129,7 +129,7 @@ GLfloat vGpioVertices[6][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
                                   0.0f,  0.0f,
                                   0.0f, -0.1f, 0.0f,
                                   1.0f,  0.0f,
-                                  0.0f,  0.1f, 0.0f 
+                                  0.0f,  0.1f, 0.0f, 
                                   1.0f,  1.0f       },
                                {  0.0f,  0.1f, 0.0f,  //BT-2
                                   0.0f,  1.0f,
@@ -137,7 +137,7 @@ GLfloat vGpioVertices[6][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
                                   0.0f,  0.0f,
                                   0.2f, -0.1f, 0.0f,
                                   1.0f,  0.0f,
-                                  0.2f,  0.1f, 0.0f 
+                                  0.2f,  0.1f, 0.0f, 
                                   1.0f,  1.0f       },
                                {  0.2f,  0.1f, 0.0f,  //BT-3
                                   0.0f,  1.0f,
@@ -145,7 +145,7 @@ GLfloat vGpioVertices[6][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
                                   0.0f,  0.0f,
                                   0.4f, -0.1f, 0.0f,
                                   1.0f,  0.0f,
-                                  0.4f,  0.1f, 0.0f 
+                                  0.4f,  0.1f, 0.0f, 
                                   1.0f,  1.0f       },
                                { -0.4f,  0.1f, 0.0f,  //FX-L
                                   0.0f,  1.0f,
@@ -153,7 +153,7 @@ GLfloat vGpioVertices[6][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
                                   0.0f,  0.0f,
                                   0.0f, -0.1f, 0.0f,
                                   1.0f,  0.0f,
-                                  0.0f,  0.1f, 0.0f 
+                                  0.0f,  0.1f, 0.0f, 
                                   1.0f,  1.0f       },
                                {  0.0f,  0.1f, 0.0f,  //FX-R
                                   0.0f,  1.0f,
@@ -161,8 +161,8 @@ GLfloat vGpioVertices[6][] = { { -0.4f,  0.1f, 0.0f,  //BT-0
                                   0.0f,  0.0f,
                                   0.4f, -0.1f, 0.0f,
                                   1.0f,  0.0f,
-                                  0.4f,  0.1f, 0.0f 
-                                  1.0f,  1.0f       }};
+                                  0.4f,  0.1f, 0.0f, 
+                                  1.0f,  1.0f       } };
  
 GLfloat tVertices[] = {  0.2f, -0.1f, 0.0f, 
                          0.2f,  0.1f, 0.0f,
@@ -310,7 +310,7 @@ int Init ( ESContext *esContext )
 
    printf("Start registering es functions\n");
 
-   glClearColor ( 0.0f, 0.0f, 0.0f, 0.0f );
+   glClearColor ( 1.0f, 1.0f, 1.0f, 0.2f );
    return GL_TRUE;
 }
 
@@ -446,9 +446,20 @@ void Draw ( ESContext *esContext )
                                  - userData->temp + highNoteWidth;
  
 
-            glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vRpVertices[i] );
-            glEnableVertexAttribArray( 0 );
-            glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
+            glVertexAttribPointer ( userData->positionLoc, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vRpVertices[i] );
+            glVertexAttribPointer ( userData->texCoordLoc, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), &vRpVertices[i][3] );
+
+            glEnableVertexAttribArray( userData->positionLoc );
+            glEnableVertexAttribArray( userData->texCoordLoc );
+
+            // Bind the texture
+            glActiveTexture( GL_TEXTURE0 );
+            glBindTexture(GL_TEXTURE_2D, userData->textureId );
+
+            // Set the sampler texture unit to 0
+            glUniform1i( userData->samplerLoc, 0 );
+
+            glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
          }
       }
       tempQNode = tempQNode->link;
