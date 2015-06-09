@@ -256,9 +256,10 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
 //
 int Init ( ESContext *esContext )
 {
+   int i;
    int width, height;
    char* image;
-   char* imageName = {"jan.tga", "gpioinput.tga"};
+   char* imageName[] = {"jan.tga", "gpioinput.tga"};
    //esContext->userData = malloc(sizeof(UserData));
 
    UserData *userData = esContext->userData;
@@ -310,7 +311,7 @@ int Init ( ESContext *esContext )
          printf("load texture\n");
       
          // Load the texture
-         userData->textureId[i] = CreateSimpleTexture2D (esContext);
+         userData->textureId[i] = CreateSimpleTexture2D (esContext, i);
    }
 
    printf("Load ksh data\n");
@@ -470,10 +471,10 @@ void Draw ( ESContext *esContext )
                                  - userData->temp + highNoteWidth;
  
             // Load the vertex position
-            glVertexAttribPointer ( userData->positionLoc, 3, GL_FLOAT,
+            glVertexAttribPointer ( userData->positionLoc[0], 3, GL_FLOAT,
                                     GL_FALSE, 5 * sizeof(GLfloat), vRpVertices[i] );
             // Load the texture coordinate
-            glVertexAttribPointer ( userData->texCoordLoc, 2, GL_FLOAT,
+            glVertexAttribPointer ( userData->texCoordLoc[0], 2, GL_FLOAT,
                                     GL_FALSE, 5 * sizeof(GLfloat), &vRpVertices[i][3] );
 
             glEnableVertexAttribArray( userData->positionLoc[0] );
@@ -500,10 +501,10 @@ void Draw ( ESContext *esContext )
          //glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
          
          // Load the vertex position
-         glVertexAttribPointer ( userData->positionLoc, 3, GL_FLOAT, 
+         glVertexAttribPointer ( userData->positionLoc[1], 3, GL_FLOAT, 
                                  GL_FALSE, 5 * sizeof(GLfloat), vGpioVertices[9 - i] );
          // Load the texture coordinate
-         glVertexAttribPointer ( userData->texCoordLoc, 2, GL_FLOAT,
+         glVertexAttribPointer ( userData->texCoordLoc[1], 2, GL_FLOAT,
                                  GL_FALSE, 5 * sizeof(GLfloat), &vGpioVertices[9 - i][3] );
       
          glEnableVertexAttribArray ( userData->positionLoc[1] );
@@ -530,14 +531,17 @@ void Draw ( ESContext *esContext )
 //
 void ShutDown ( ESContext *esContext )
 {
+   int i;
    UserData *userData = esContext->userData;
 
-   // Delete texture object
-   glDeleteTextures ( 1, &userData->textureId );
+   for(i = 0; i < 2; i++) {
+      // Delete texture object
+      glDeleteTextures ( 1, &userData->textureId[i] );
 
-   // Delete program object
-   glDeleteProgram ( userData->programObject );
-	
+      // Delete program object
+      glDeleteProgram ( userData->programObject[i] );   
+   }
+
    free(esContext->userData);
 }
 
