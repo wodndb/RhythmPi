@@ -115,53 +115,53 @@ GLfloat vRpVertices[7][20] ={{ -0.4f,  0.1f, 0.0f,  //BT-0
                                 0.4f,  0.1f, 0.0f,
                                 1.0f,  1.0f       } };
 
-GLfloat vGpioVertices[6][20] ={{ -0.4f,  0.1f, 0.0f,  //BT-0
+GLfloat vGpioVertices[6][20] ={{ -0.4f,  0.0f, -0.1f,  //BT-0
                                   0.0f,  1.0f,
-                                 -0.4f, -0.1f, 0.0f,
+                                 -0.4f, -1.0f, -0.1f,
                                   0.0f,  0.0f,
-                                 -0.2f, -0.1f, 0.0f,
+                                 -0.2f, -1.0f, -0.1f,
                                   1.0f,  0.0f,
-                                 -0.2f,  0.1f, 0.0f, 
+                                 -0.2f,  0.0f, -0.1f, 
                                   1.0f,  1.0f       },
-                               { -0.2f,  0.1f, 0.0f,  //BT-1
+                               { -0.2f,  0.0f, -0.1f,  //BT-1
                                   0.0f,  1.0f,
-                                 -0.2f, -0.1f, 0.0f,
+                                 -0.2f, -1.0f, -0.1f,
                                   0.0f,  0.0f,
-                                  0.0f, -0.1f, 0.0f,
+                                  0.0f, -1.0f, -0.1f,
                                   1.0f,  0.0f,
-                                  0.0f,  0.1f, 0.0f, 
+                                  0.0f,  0.0f, -0.1f, 
                                   1.0f,  1.0f       },
-                               {  0.0f,  0.1f, 0.0f,  //BT-2
+                               {  0.0f,  0.0f, -0.1f,  //BT-2
                                   0.0f,  1.0f,
-                                  0.0f, -0.1f, 0.0f,
+                                  0.0f, -1.0f, -0.1f,
                                   0.0f,  0.0f,
-                                  0.2f, -0.1f, 0.0f,
+                                  0.2f, -1.0f, -0.1f,
                                   1.0f,  0.0f,
-                                  0.2f,  0.1f, 0.0f, 
+                                  0.2f,  0.0f, -0.1f, 
                                   1.0f,  1.0f       },
-                               {  0.2f,  0.1f, 0.0f,  //BT-3
+                               {  0.2f,  0.0f, -0.1f,  //BT-3
                                   0.0f,  1.0f,
-                                  0.2f, -0.1f, 0.0f,
+                                  0.2f, -1.0f, -0.1f,
                                   0.0f,  0.0f,
-                                  0.4f, -0.1f, 0.0f,
+                                  0.4f, -1.0f, -0.1f,
                                   1.0f,  0.0f,
-                                  0.4f,  0.1f, 0.0f, 
+                                  0.4f,  0.0f, -0.1f, 
                                   1.0f,  1.0f       },
-                               { -0.4f,  0.1f, 0.0f,  //FX-L
+                               { -0.4f,  0.0f, -0.1f,  //FX-L
                                   0.0f,  1.0f,
-                                 -0.4f, -0.1f, 0.0f,
+                                 -0.4f, -1.0f, -0.1f,
                                   0.0f,  0.0f,
-                                  0.0f, -0.1f, 0.0f,
+                                  0.0f, -1.0f, -0.1f,
                                   1.0f,  0.0f,
-                                  0.0f,  0.1f, 0.0f, 
+                                  0.0f,  0.0f, -0.1f, 
                                   1.0f,  1.0f       },
-                               {  0.0f,  0.1f, 0.0f,  //FX-R
+                               {  0.0f,  0.0f, -0.1f,  //FX-R
                                   0.0f,  1.0f,
-                                  0.0f, -0.1f, 0.0f,
+                                  0.0f, -1.0f, -0.1f,
                                   0.0f,  0.0f,
-                                  0.4f, -0.1f, 0.0f,
+                                  0.4f, -1.0f, -0.1f,
                                   1.0f,  0.0f,
-                                  0.4f,  0.1f, 0.0f, 
+                                  0.4f,  0.0f, -0.1f, 
                                   1.0f,  1.0f       } };
  
 GLfloat tVertices[] = {  0.2f, -0.1f, 0.0f, 
@@ -259,7 +259,7 @@ int Init ( ESContext *esContext )
    int i;
    int width, height;
    char* image;
-   char imageName[2][] = {"jan.tga", "gpioinput.tga"};
+   char imageName[2][80] = {"jan.tga", "gpioinput.tga"};
    //esContext->userData = malloc(sizeof(UserData));
 
    UserData *userData = esContext->userData;
@@ -321,7 +321,7 @@ int Init ( ESContext *esContext )
    userData->ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
    userData->kshFile = fopen("../kshLoader/test.ksh", "r");
    userData->qtNote = (QType*)malloc(1 * sizeof(QType));
-   userData->temp = -1.0;
+   userData->temp = -2.0;
 
    if(userData->kshFile == NULL) {
       printf("file load error!\n");
@@ -335,7 +335,7 @@ int Init ( ESContext *esContext )
 
    printf("Start registering es functions\n");
 
-   glClearColor ( 1.0f, 1.0f, 1.0f, 0.2f );
+   glClearColor ( 0.0f, 0.0f, 0.0f, 1.0f );
    return GL_TRUE;
 }
 
@@ -433,7 +433,36 @@ void Draw ( ESContext *esContext )
             break;
       }
    }
-   
+    // Draw about input from GPIO
+   for(i = 9; i >= 4; i--) {
+      if( (userData->gpioStat & (0x01 << i)) >> i == 0x01 ) {
+         //glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, vGpioVertices[9 - i] );
+         //glEnableVertexAttribArray( 0 );
+         //glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
+         
+         glUseProgram ( userData->programObject[1] );
+         // Load the vertex position
+         glVertexAttribPointer ( userData->positionLoc[1], 3, GL_FLOAT, 
+                                 GL_FALSE, 5 * sizeof(GLfloat), vGpioVertices[9 - i] );
+         // Load the texture coordinate
+         glVertexAttribPointer ( userData->texCoordLoc[1], 2, GL_FLOAT,
+                                 GL_FALSE, 5 * sizeof(GLfloat), &vGpioVertices[9 - i][3] );
+      
+         glEnableVertexAttribArray ( userData->positionLoc[1] );
+         glEnableVertexAttribArray ( userData->texCoordLoc[1] );
+      
+         // Bind the texture
+         glActiveTexture ( GL_TEXTURE0 );
+         glBindTexture ( GL_TEXTURE_2D, userData->textureId[1] );
+      
+         // Set the sampler texture unit to 0
+         glUniform1i ( userData->samplerLoc[1], 0 );
+      
+         glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
+      }
+   }
+  
+   glUseProgram ( userData->programObject[0] );
    // Draw notes
    while(tempQNode->link != NULL) {
       for(i = 0; i <= 6; i++) {
@@ -494,33 +523,6 @@ void Draw ( ESContext *esContext )
       tempQNode = tempQNode->link;
    }
 
-   // Draw about input from GPIO
-   for(i = 9; i >= 4; i--) {
-      if( (userData->gpioStat & (0x01 << i)) >> i == 0x01 ) {
-         //glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, vGpioVertices[9 - i] );
-         //glEnableVertexAttribArray( 0 );
-         //glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-         
-         // Load the vertex position
-         glVertexAttribPointer ( userData->positionLoc[1], 3, GL_FLOAT, 
-                                 GL_FALSE, 5 * sizeof(GLfloat), vGpioVertices[9 - i] );
-         // Load the texture coordinate
-         glVertexAttribPointer ( userData->texCoordLoc[1], 2, GL_FLOAT,
-                                 GL_FALSE, 5 * sizeof(GLfloat), &vGpioVertices[9 - i][3] );
-      
-         glEnableVertexAttribArray ( userData->positionLoc[1] );
-         glEnableVertexAttribArray ( userData->texCoordLoc[1] );
-      
-         // Bind the texture
-         glActiveTexture ( GL_TEXTURE0 );
-         glBindTexture ( GL_TEXTURE_2D, userData->textureId[1] );
-      
-         // Set the sampler texture unit to 0
-         glUniform1i ( userData->samplerLoc[1], 0 );
-      
-         glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
-      }
-   }
 
    // LED Enable
    setOutputGPIO(userData->gpioStat);
