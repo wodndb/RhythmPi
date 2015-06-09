@@ -40,7 +40,7 @@ typedef struct _user_data
    // Texture handle
    GLuint textureId;
 
-   GLubyte *image;
+   char *image;
    int width, height;
    
    // wodndb data
@@ -176,11 +176,11 @@ GLuint CreateSimpleTexture2D(ESContext *esContext)
 {
    // Texture object handle
    GLuint textureId;
-   UserData *userData = esContext->userData;
+   UserData *userData = (UserData*) esContext->userData;
    
-   GLubyte *pixels = userData->image;
-   userData->width = esContext->width;
-   userData->height = esContext->height;
+   char *pixels = userData->image;
+
+   printf("Create Simple Texture 2D\n");
 
    // Use tightly packed data
    glPixelStorei ( GL_UNPACK_ALIGNMENT, 1 );
@@ -192,9 +192,9 @@ GLuint CreateSimpleTexture2D(ESContext *esContext)
    glBindTexture ( GL_TEXTURE_2D, textureId );
 
    // Load the texture
-   glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGB, 
+   glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, 
 		  userData->width, userData->height, 
-		  0, GL_RGB, GL_UNSIGNED_BYTE, pixels );
+		  0, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
 
    // Set the filtering mode
    glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -257,6 +257,8 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
 //
 int Init ( ESContext *esContext )
 {
+   int width, height;
+   char* image;
    //esContext->userData = malloc(sizeof(UserData));
 
    UserData *userData = esContext->userData;
@@ -279,18 +281,38 @@ int Init ( ESContext *esContext )
       "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
       "}                                                   \n";
 
+
+   image = esLoadTGA("jan.tga", &width, &height);
+   if (image == NULL) {
+       fprintf(stderr, "No such image\n");
+       exit(1);
+   }
+   printf("Width %d height %d\n", width, height);
+   
+   userData->image = image;
+   userData->width = width;
+   userData->height = height;
+
+   printf("Load the shaders and get a linked program object\n");
+
    // Load the shaders and get a linked program object
    userData->programObject = esLoadProgram ( vShaderStr, fShaderStr );
 
    // Get the attribute locations
    userData->positionLoc = glGetAttribLocation ( userData->programObject, "a_position" );
    userData->texCoordLoc = glGetAttribLocation ( userData->programObject, "a_texCoord" );
+
+   printf("get sampler location\n");
    
    // Get the sampler location
    userData->samplerLoc = glGetUniformLocation ( userData->programObject, "s_texture" );
 
+   printf("load texture\n");
+
    // Load the texture
    userData->textureId = CreateSimpleTexture2D (esContext);
+
+   printf("Load ksh data\n");
 
    //getKshData
    userData->ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
@@ -358,7 +380,7 @@ void Draw ( ESContext *esContext )
                      && ((hittedGpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 2))) == 0) ) {
                            printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> (i + 2));
                            hittedGpioStat |= (RP_NOTE_TYPE_BT_FIRST >> (i + 2));
-                           if(tempQNode->note.type & 0xF000 != 0) {
+                           if((tempQNode->note.type & 0xF000) != 0) {
                               tempQNode->note.hitted = 0x02;
                            }
                            else {
@@ -372,7 +394,7 @@ void Draw ( ESContext *esContext )
                      && ((hittedGpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 1))) == 0) ) {
                            printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> (i + 1));
                            hittedGpioStat |= (RP_NOTE_TYPE_BT_FIRST >> (i + 1));
-                           if(tempQNode->note.type & 0xF000 != 0) {
+                           if((tempQNode->note.type & 0xF000) != 0) {
                               tempQNode->note.hitted = 0x02;
                            }
                            else {
@@ -472,9 +494,9 @@ void Draw ( ESContext *esContext )
    // Draw about input from GPIO
    for(i = 9; i >= 4; i--) {
       if( (userData->gpioStat & (0x01 << i)) >> i == 0x01 ) {
-         glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, vGpioVertices[9 - i] );
-         glEnableVertexAttribArray( 0 );
-         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
+         //glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, vGpioVertices[9 - i] );
+         //glEnableVertexAttribArray( 0 );
+         //glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
          
          // Load the vertex position
          glVertexAttribPointer ( userData->positionLoc, 3, GL_FLOAT, 
@@ -536,20 +558,6 @@ int main ( int argc, char *argv[] )
    ESContext esContext;
    UserData  userData;
    pid_t pid;
-   
-   int width, height;
-   GLubyte *image;
-
-   image = esLoadTGA("jan.tga", &width, &height);
-   if (image == NULL) {
-       fprintf(stderr, "No such image\n");
-       exit(1);
-   }
-   printf("Width %d height %d\n", width, height);
-   
-   userData.image = image;
-   userData.width = width;
-   userData.height = height;
 
    esInitContext ( &esContext );
    esContext.userData = &userData;
@@ -558,6 +566,8 @@ int main ( int argc, char *argv[] )
 
    if ( !Init ( &esContext ) )
       return 0;
+
+
 
    esRegisterDrawFunc ( &esContext, Draw );
    esRegisterUpdateFunc ( &esContext, Update );
