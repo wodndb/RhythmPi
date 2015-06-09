@@ -40,12 +40,12 @@
 #define IMG_BAD               8
 
 // Stage state macro
-#define STAGE_MAIN            0x01;
-#define STAGE_SELECT_MUSIC    0x02;
-#define STAGE_OPTION          0x04;
-#define STAGE_PLAY            0x08;
-#define STAGE_END             0x10;
-#define STAGE_OPTION_SEL_SPD  0x20;
+#define STAGE_MAIN            0x01
+#define STAGE_SELECT_MUSIC    0x02
+#define STAGE_OPTION          0x04
+#define STAGE_PLAY            0x08
+#define STAGE_END             0x10
+#define STAGE_OPTION_SEL_SPD  0x20
 
 typedef struct _user_data
 {
@@ -237,7 +237,7 @@ GLuint CreateSimpleTexture2D(ESContext *esContext, int imageIndex)
    GLuint textureId;
    UserData *userData = (UserData*) esContext->userData;
    
-   char *pixels = userData->image[imageIndex];
+   GLubyte *pixels = userData->image[imageIndex];
 
    printf("Create Simple Texture 2D\n");
 
@@ -249,11 +249,13 @@ GLuint CreateSimpleTexture2D(ESContext *esContext, int imageIndex)
 
    // Bind the texture object
    glBindTexture ( GL_TEXTURE_2D, textureId );
+   printf("Loaded texture\n");
 
    // Load the texture
    glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, 
 		  userData->width[imageIndex], userData->height[imageIndex], 
-		  0, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
+		  0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, pixels );
+
 
    // Set the filtering mode
    glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -327,7 +329,8 @@ int Init ( ESContext *esContext )
                                       "../img/select_cursor.tga",
                                       "../img/good.tga",
                                       "../img/bad.tga"};
-   //esContext->userData = malloc(sizeof(UserData));
+
+   esContext->userData = malloc(sizeof(UserData));
 
    UserData *userData = esContext->userData;
    GLbyte vShaderStr[] =
@@ -428,12 +431,12 @@ void Draw ( ESContext *esContext )
    float highNoteWidth = 0;
    UserData *userData = ( UserData* ) esContext->userData;
    QNode* tempQNode = NULL;
-   char* musicKshFile[4][80] = {"../songs/ksm/colorfulsky/colorfulsky_lt.ksh",
+   char musicKshFile[4][80] = {"../songs/ksm/colorfulsky/colorfulsky_lt.ksh",
                                 "../songs/ksm/bigecho/bigecho_lt.ksh",
                                 "../songs/ksm/homura/homura_lt.ksh",
                                 "../songs/ksm/dolphinstalker_lt.ksh"};
 
-   char* musicOggFile[4][80] = {"../songs/ksm/colorfulsky/colorfulsky_lt_f.ogg",
+   char musicOggFile[4][80] = {"../songs/ksm/colorfulsky/colorfulsky_lt_f.ogg",
                                 "../songs/ksm/bigecho/bigecho_lt_f.ogg",
                                 "../songs/ksm/homura/homura_lt_f.ogg",
                                 "../songs/ksm/dolphinstalker_lt_f.ogg"};
@@ -511,10 +514,10 @@ void Draw ( ESContext *esContext )
       setOutputGPIO(userData->gpioStat);
       
       if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_RIGHT) {
-            userData->musicNum = (userData->musicNum + 1) % 4
+            userData->musicNum = (userData->musicNum + 1) % 4;
       }
       else if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_LEFT) {
-            userData->musicNum = (userData->musicNum + 3) % 4
+            userData->musicNum = (userData->musicNum + 3) % 4;
       }
       
       vMusicSelect[1] = 0.4 - (0.2 * userData->musicNum);
@@ -570,7 +573,7 @@ void Draw ( ESContext *esContext )
                case -1:
                {
                   printf("child process can't be created\n");
-                  return -1;
+                  exit(0);
                }
                case 0:     // Play music
                {
@@ -579,7 +582,7 @@ void Draw ( ESContext *esContext )
                }
                default:
                {
-                  userData->pid = musicPid;
+                  userData->musicPid = pid;
                }
            }
       }
@@ -613,10 +616,10 @@ void Draw ( ESContext *esContext )
       setOutputGPIO(userData->gpioStat);
       
       if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_RIGHT) {
-            userData->selectedOption = (userData->selectedOption + 1) % 4
+            userData->selectedOption = (userData->selectedOption + 1) % 4;
       }
       else if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_LEFT) {
-            userData->selectedOption = (userData->selectedOption + 3) % 4
+            userData->selectedOption = (userData->selectedOption + 3) % 4;
       }
       
       vMusicSelect[1] = 0.4 - (0.2 * userData->selectedOption);
@@ -680,7 +683,7 @@ void Draw ( ESContext *esContext )
                      case -1:
                      {
                         printf("child process can't be created\n");
-                        return -1;
+                        exit(0);
                      }
                      case 0:     // Play music
                      {
@@ -689,7 +692,7 @@ void Draw ( ESContext *esContext )
                      }
                      default:
                      {
-                        userData->pid = musicPid;
+                        userData->musicPid = pid;
                      }
                  }
             }
@@ -729,10 +732,10 @@ void Draw ( ESContext *esContext )
       setOutputGPIO(userData->gpioStat);
       
       if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_RIGHT) {
-            userData->selectedSpeed = (userData->selectedSpeed + 1) % 4
+            userData->selectedSpeed = (userData->selectedSpeed + 1) % 4;
       }
       else if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_LEFT) {
-            userData->selectedSpeed = (userData->selectedSpeed + 3) % 4
+            userData->selectedSpeed = (userData->selectedSpeed + 3) % 4;
       }
       
       //----------------Change This Code - move horizental-----------------------//
@@ -939,10 +942,10 @@ void Draw ( ESContext *esContext )
          // LED Enable
          setOutputGPIO(userData->gpioStat);
          
-         if(UserData->gpioStat & 0x400 != 0) {
+         if(userData->gpioStat & 0x400 != 0) {
                //Initialize ksh Data;
                kill(userData->musicPid, SIGKILL);           // close music
-               while(userData->qtNote->first != NULL) {     // free qtNote;
+               while(userData->qtNote->front != NULL) {     // free qtNote;
                      dequeue(userData->qtNote);
                }
                free(userData->ki);
@@ -956,7 +959,7 @@ void Draw ( ESContext *esContext )
          }
          
          //End Music
-         if(userData->qtNote->first == NULL) {
+         if(userData->qtNote->front == NULL) {
                usleep(300000);
                
                free(userData->ki);
@@ -969,7 +972,7 @@ void Draw ( ESContext *esContext )
                userData->stageState = STAGE_END;              
          }
    }
-   else if(UserData->stageState == STAGE_END) {
+   else if(userData->stageState == STAGE_END) {
       // Use the program object
       glUseProgram ( userData->programObject[IMG_END] );
       
@@ -996,10 +999,10 @@ void Draw ( ESContext *esContext )
       setOutputGPIO(userData->gpioStat);
       
       if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_RIGHT) {
-            userData->selectedOption = (userData->selectedOption + 1) % 2
+            userData->selectedOption = (userData->selectedOption + 1) % 2;
       }
       else if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_LEFT) {
-            userData->selectedOption = (userData->selectedOption + 1) % 2
+            userData->selectedOption = (userData->selectedOption + 1) % 2;
       }
       
       vMusicSelect[1] = -0.2 - (0.2 * userData->selectedOption);
