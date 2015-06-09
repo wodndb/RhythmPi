@@ -257,7 +257,7 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
 //
 int Init ( ESContext *esContext )
 {
-   esContext->userData = malloc(sizeof(UserData));
+   //esContext->userData = malloc(sizeof(UserData));
 
    UserData *userData = esContext->userData;
    GLbyte vShaderStr[] =
@@ -435,6 +435,7 @@ void Draw ( ESContext *esContext )
                lowNoteWidth = 0.025;
                highNoteWidth = 0.025;
             }
+            
 
             vRpVertices[i][1] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
                                 - userData->temp + highNoteWidth;
@@ -445,21 +446,24 @@ void Draw ( ESContext *esContext )
             vRpVertices[i][16] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
                                  - userData->temp + highNoteWidth;
  
-
-            glVertexAttribPointer ( userData->positionLoc, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vRpVertices[i] );
-            glVertexAttribPointer ( userData->texCoordLoc, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), &vRpVertices[i][3] );
+            // Load the vertex position
+            glVertexAttribPointer ( userData->positionLoc, 3, GL_FLOAT,
+                                    GL_FALSE, 5 * sizeof(GLfloat), vRpVertices[i] );
+            // Load the texture coordinate
+            glVertexAttribPointer ( userData->texCoordLoc, 2, GL_FLOAT,
+                                    GL_FALSE, 5 * sizeof(GLfloat), &vRpVertices[i][3] );
 
             glEnableVertexAttribArray( userData->positionLoc );
             glEnableVertexAttribArray( userData->texCoordLoc );
 
             // Bind the texture
-            glActiveTexture( GL_TEXTURE0 );
-            glBindTexture(GL_TEXTURE_2D, userData->textureId );
+            glActiveTexture ( GL_TEXTURE0 );
+            glBindTexture ( GL_TEXTURE_2D, userData->textureId );
 
             // Set the sampler texture unit to 0
-            glUniform1i( userData->samplerLoc, 0 );
-
-            glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
+            glUniform1i ( userData->samplerLoc, 0 );
+         
+            glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
          }
       }
       tempQNode = tempQNode->link;
@@ -471,12 +475,47 @@ void Draw ( ESContext *esContext )
          glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, vGpioVertices[9 - i] );
          glEnableVertexAttribArray( 0 );
          glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
+         
+         // Load the vertex position
+         glVertexAttribPointer ( userData->positionLoc, 3, GL_FLOAT, 
+                                 GL_FALSE, 5 * sizeof(GLfloat), vGpioVertices[9 - i] );
+         // Load the texture coordinate
+         glVertexAttribPointer ( userData->texCoordLoc, 2, GL_FLOAT,
+                                 GL_FALSE, 5 * sizeof(GLfloat), &vGpioVertices[9 - i][3] );
+      
+         glEnableVertexAttribArray ( userData->positionLoc );
+         glEnableVertexAttribArray ( userData->texCoordLoc );
+      
+         // Bind the texture
+         glActiveTexture ( GL_TEXTURE0 );
+         glBindTexture ( GL_TEXTURE_2D, userData->textureId );
+      
+         // Set the sampler texture unit to 0
+         glUniform1i ( userData->samplerLoc, 0 );
+      
+         glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
       }
    }
 
    // LED Enable
    setOutputGPIO(userData->gpioStat);
 
+}
+
+///
+// Cleanup
+//
+void ShutDown ( ESContext *esContext )
+{
+   UserData *userData = esContext->userData;
+
+   // Delete texture object
+   glDeleteTextures ( 1, &userData->textureId );
+
+   // Delete program object
+   glDeleteProgram ( userData->programObject );
+	
+   free(esContext->userData);
 }
 
 void Update ( ESContext *esContext, float deltaTime ) {
@@ -542,6 +581,8 @@ int main ( int argc, char *argv[] )
          esMainLoop ( &esContext );
       }
    }
+
+   ShutDown ( &esContext );
 
    return 0;
 }
