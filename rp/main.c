@@ -205,22 +205,22 @@ GLfloat vFullScreen[] = { -1.0f,  1.0f, -0.1f,
                            1.0f,  1.0f, -0.1f, 
                            1.0f,  1.0f       };
                            
-GLfloat vMusicSelect[] = { -0.8f,  0.7f,  0.1f,
+GLfloat vMusicSelect[] = { -0.75f,  0.7f,  0.1f,
                             0.0f,  1.0f,
-                           -0.8f,  0.5f,  0.1f,
+                           -0.75f,  0.5f,  0.1f,
                             0.0f,  0.0f,
                            -0.6f,  0.5f,  0.1f,
                             1.0f,  0.0f,
                            -0.6f,  0.7f,  0.1f, 
                             1.0f,  1.0f       };
                             
-GLfloat vSpeedSelect[] = { -0.8f,  1.0f,  0.1f,
+GLfloat vSpeedSelect[] = { -0.8f,  0.46f,  0.1f,
                             0.0f,  1.0f,
-                           -0.8f, -1.0f,  0.1f,
+                           -0.8f,  0.36f,  0.1f,
                             0.0f,  0.0f,
-                           -0.6f, -1.0f,  0.1f,
+                           -0.6f,  0.36f,  0.1f,
                             1.0f,  0.0f,
-                           -0.6f,  1.0f,  0.1f, 
+                           -0.6f,  0.46f,  0.1f, 
                             1.0f,  1.0f       };
  
 GLfloat tVertices[] = {  0.2f, -0.1f, 0.0f, 
@@ -389,6 +389,7 @@ int Init ( ESContext *esContext )
    userData->selectedOption = 0;
    userData->selectedSpeed = 1;
    userData->speed = 1;
+
    /*
    printf("Load ksh data\n");
    //getKshData
@@ -407,6 +408,8 @@ int Init ( ESContext *esContext )
 
    // GPIO Initialization
    initPinMode();
+   userData->gpioStat = 0x00;
+   userData->prevGpioStat = 0x00;
 
    printf("Start registering es functions\n");
 
@@ -427,18 +430,25 @@ void Draw ( ESContext *esContext )
    float highNoteWidth = 0;
    UserData *userData = ( UserData* ) esContext->userData;
    QNode* tempQNode = NULL;
+   FILE* cmdStream;
+   char cmdBuffer[200];
+   int cmdPid;
+
    char musicKshFile[4][80] = {"../songs/ksm/colorfulsky/colorfulsky_lt.ksh",
                                 "../songs/ksm/bigecho/bigecho_lt.ksh",
                                 "../songs/ksm/homura/homura_lt.ksh",
-                                "../songs/ksm/dolphinstalker_lt.ksh"};
+                                "../songs/ksm/dolphinstalker/dolphinstalker_lt.ksh"};
 
    char musicOggFile[4][80] = {"../songs/ksm/colorfulsky/colorfulsky_lt_f.ogg",
                                 "../songs/ksm/bigecho/bigecho_lt_f.ogg",
                                 "../songs/ksm/homura/homura_lt_f.ogg",
-                                "../songs/ksm/dolphinstalker_lt_f.ogg"};
+                                "../songs/ksm/dolphinstalker/dolphinstalker_lt_f.ogg"};
    
    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
-   tempQNode = userData->qtNote->front;
+
+   if(userData->stageState == STAGE_PLAY) {
+      tempQNode = userData->qtNote->front;
+   }
 
    // Set the viewport
    glViewport ( 0, 0, esContext->width, esContext->height );
@@ -446,9 +456,6 @@ void Draw ( ESContext *esContext )
    // Clear the color buffer
    glClear ( GL_COLOR_BUFFER_BIT );
 
-   // Use the program object
-   glUseProgram ( userData->programObject[0] );
-   
    if(userData->stageState == STAGE_MAIN) {
       // Use the program object
       glUseProgram ( userData->programObject[IMG_MAIN] );
@@ -472,10 +479,12 @@ void Draw ( ESContext *esContext )
       
       glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
       
-      if(userData->gpioStat != 0) {
+      if((userData->gpioStat & 0x7F0) != 0 && (userData->prevGpioStat & 0x7F0) == 0) {
+            userData->gpioStat = 0x00;
+            userData->prevGpioStat = 0x00;
             userData->stageState = STAGE_SELECT_MUSIC;
       }
-      
+      /*
       if(userData->temp > 0.5) {
             setOutputGPIO(0x7F0);
       }
@@ -483,6 +492,7 @@ void Draw ( ESContext *esContext )
             setOutputGPIO(0x000);
             userData->temp = 0;
       }
+      */
    }
    else if(userData->stageState == STAGE_SELECT_MUSIC) {
       // Use the program object
@@ -510,16 +520,16 @@ void Draw ( ESContext *esContext )
       setOutputGPIO(userData->gpioStat);
       
       if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_RIGHT) {
-            userData->musicNum = (userData->musicNum + 1) % 4;
-      }
-      else if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_LEFT) {
             userData->musicNum = (userData->musicNum + 3) % 4;
       }
+      else if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_LEFT) {
+            userData->musicNum = (userData->musicNum + 1) % 4;
+      }
       
-      vMusicSelect[1] = 0.4 - (0.2 * userData->musicNum);
-      vMusicSelect[6] = 0.2 - (0.2 * userData->musicNum);
-      vMusicSelect[11] = 0.2 - (0.2 * userData->musicNum);
-      vMusicSelect[16] = 0.4 - (0.2 * userData->musicNum);
+      vMusicSelect[1] = 0.41 - (0.24 * userData->musicNum);
+      vMusicSelect[6] = 0.21 - (0.24 * userData->musicNum);
+      vMusicSelect[11] = 0.21 - (0.24 * userData->musicNum);
+      vMusicSelect[16] = 0.41 - (0.24 * userData->musicNum);
       
       // Use the program object
       glUseProgram ( userData->programObject[IMG_SELECT_CURSOR] );
@@ -543,7 +553,7 @@ void Draw ( ESContext *esContext )
       
       glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
       
-      if(userData->gpioStat & 0x020!= 0) {
+      if((userData->gpioStat & 0x020) != 0 && (userData->prevGpioStat & 0x020) == 0) {
             userData->stageState = STAGE_PLAY;
             
             //Please load ksh file and set music
@@ -552,15 +562,18 @@ void Draw ( ESContext *esContext )
             userData->ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
             userData->kshFile = fopen(musicKshFile[userData->musicNum], "r");
             userData->qtNote = (QType*)malloc(1 * sizeof(QType));
-            userData->temp = -2.0;
       
             if(userData->kshFile == NULL) {
                printf("file load error!\n");
+               printf("filename : %s\n", musicKshFile[userData->musicNum]);
                exit(1);
             }
       
             getKshInfo(userData->kshFile, userData->ki);
             loadKshNote(userData->kshFile, userData->qtNote);
+
+            userData->temp = -1.0 * ((float)(userData->ki->t - 100) / 80.0 * 3.0);
+
             
             // Fork for play music
             pid = fork();
@@ -574,7 +587,7 @@ void Draw ( ESContext *esContext )
                case 0:     // Play music
                {
                   //system("omxplayer ../songs/ksm/homura/homura.ogg");
-                  execlp("omxplayer", "omxplayer", musicOggFile[userData->musicNum]);
+                  execlp("omxplayer", "omxplayer", musicOggFile[userData->musicNum], NULL);
                }
                default:
                {
@@ -618,10 +631,10 @@ void Draw ( ESContext *esContext )
             userData->selectedOption = (userData->selectedOption + 3) % 4;
       }
       
-      vMusicSelect[1] = 0.4 - (0.2 * userData->selectedOption);
-      vMusicSelect[6] = 0.2 - (0.2 * userData->selectedOption);
-      vMusicSelect[11] = 0.2 - (0.2 * userData->selectedOption);
-      vMusicSelect[16] = 0.4 - (0.2 * userData->selectedOption);
+      vMusicSelect[1] = 0.5 - (0.32 * userData->selectedOption);
+      vMusicSelect[6] = 0.3 - (0.32 * userData->selectedOption);
+      vMusicSelect[11] = 0.3 - (0.32 * userData->selectedOption);
+      vMusicSelect[16] = 0.5 - (0.32 * userData->selectedOption);
       
       // Use the program object
       glUseProgram ( userData->programObject[IMG_SELECT_CURSOR] );
@@ -645,7 +658,7 @@ void Draw ( ESContext *esContext )
       
       glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
       
-      if(userData->gpioStat & 0x020 != 0) {
+      if((userData->gpioStat & 0x020) != 0 && (userData->prevGpioStat & 0x020) == 0) {
             //Reset ksh data -> to do in play music;
             
             if(userData->selectedOption == 0) {
@@ -684,7 +697,7 @@ void Draw ( ESContext *esContext )
                      case 0:     // Play music
                      {
                         //system("omxplayer ../songs/ksm/homura/homura.ogg");
-                        execlp("omxplayer", "omxplayer", musicOggFile[userData->musicNum]);
+                        execlp("omxplayer", "omxplayer", musicOggFile[userData->musicNum], NULL);
                      }
                      default:
                      {
@@ -735,20 +748,20 @@ void Draw ( ESContext *esContext )
       }
       
       //----------------Change This Code - move horizental-----------------------//
-      vSpeedSelect[0] = -0.1 + (0.2 * userData->selectedSpeed);
-      vSpeedSelect[5] = -0.1 + (0.2 * userData->selectedSpeed);
-      vSpeedSelect[10] = 0.1 + (0.2 * userData->selectedSpeed);
-      vSpeedSelect[15] = 0.1 + (0.2 * userData->selectedSpeed);
+      vSpeedSelect[0] = -0.13 + (0.23 * userData->selectedSpeed);
+      vSpeedSelect[5] = -0.13 + (0.23 * userData->selectedSpeed);
+      vSpeedSelect[10] = -0.09 + (0.23 * userData->selectedSpeed);
+      vSpeedSelect[15] = -0.09 + (0.23 * userData->selectedSpeed);
       
       // Use the program object
       glUseProgram ( userData->programObject[IMG_SELECT_CURSOR] );
       
       // Load the vertex position
       glVertexAttribPointer ( userData->positionLoc[IMG_SELECT_CURSOR], 3, GL_FLOAT, 
-                              GL_FALSE, 5 * sizeof(GLfloat), vMusicSelect );
+                              GL_FALSE, 5 * sizeof(GLfloat), vSpeedSelect );
       // Load the texture coordinate
       glVertexAttribPointer ( userData->texCoordLoc[IMG_SELECT_CURSOR], 2, GL_FLOAT,
-                              GL_FALSE, 5 * sizeof(GLfloat), &vMusicSelect[3] );
+                              GL_FALSE, 5 * sizeof(GLfloat), &vSpeedSelect[3] );
       
       glEnableVertexAttribArray ( userData->positionLoc[IMG_SELECT_CURSOR] );
       glEnableVertexAttribArray ( userData->texCoordLoc[IMG_SELECT_CURSOR] );
@@ -764,12 +777,12 @@ void Draw ( ESContext *esContext )
       
       setOutputGPIO(userData->gpioStat);
       
-      if(userData->gpioStat & 0x020 != 0) {
+      if((userData->gpioStat & 0x020) != 0 && (userData->prevGpioStat & 0x020) == 0) {
             //Reset ksh data -> to do in play music;
             userData->speed = userData->selectedSpeed;
             userData->stageState = STAGE_OPTION;
       }
-      else if(userData->gpioStat & 0x010 != 0) {
+      else if((userData->gpioStat & 0x010) != 0 && (userData->prevGpioStat & 0x020) == 0) {
             userData->selectedSpeed = userData->speed;
             userData->stageState = STAGE_OPTION;
       }
@@ -782,7 +795,7 @@ void Draw ( ESContext *esContext )
          // Judge notes : Input from GPIO
          while(tempQNode->link != NULL) {
             if(((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
-                  - userData->temp < -0.1)
+                  - userData->temp < -0.5)
             {
                if(tempQNode->note.hitted != 1) {
                   // Check note type
@@ -830,12 +843,10 @@ void Draw ( ESContext *esContext )
          }
          
          // Judge notes : Out of line
-         while(tempQNode->link != NULL) {
-            if(((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
-                  - userData->temp < - 1.9)
+         while(userData->qtNote->front->link != NULL) {
+            if(((float)(userData->qtNote->front->note.measure) * 2.0) - userData->temp < - 10.0)
             {
                   dequeue(userData->qtNote);
-                  tempQNode = userData->qtNote->front;
                   printf("pop note : out of lines\n");
             }
             else {
@@ -938,9 +949,33 @@ void Draw ( ESContext *esContext )
          // LED Enable
          setOutputGPIO(userData->gpioStat);
          
-         if(userData->gpioStat & 0x400 != 0) {
+         //End Music
+         if(userData->qtNote->front->link == NULL) {
+               
+               free(userData->ki);
+               userData->ki = NULL;
+               fclose(userData->kshFile);
+               free(userData->qtNote);
+               userData->qtNote = NULL;
+               userData->selectedOption = 0;
+               
+               userData->stageState = STAGE_END;              
+         }
+
+         if((userData->gpioStat & 0x400) != 0) {
                //Initialize ksh Data;
-               kill(userData->musicPid, SIGKILL);           // close music
+               cmdStream = popen("ps -a | grep omxplayer.bin", "r");
+               fscanf(cmdStream, "%d", &cmdPid); 
+               kill(cmdPid, SIGKILL);           // close music
+               
+               pclose(cmdStream);
+
+               cmdStream = popen("ps -a | grep omxplayer", "r");
+               fscanf(cmdStream, "%d", &cmdPid); 
+               kill(cmdPid, SIGKILL);           // close music
+
+               pclose(cmdStream);
+
                while(userData->qtNote->front != NULL) {     // free qtNote;
                      dequeue(userData->qtNote);
                }
@@ -952,22 +987,9 @@ void Draw ( ESContext *esContext )
                userData->selectedOption = 0;
                
                userData->stageState = STAGE_OPTION;
-         }
-         
-         //End Music
-         if(userData->qtNote->front == NULL) {
-               usleep(300000);
-               
-               free(userData->ki);
-               userData->ki = NULL;
-               fclose(userData->kshFile);
-               free(userData->qtNote);
-               userData->qtNote = NULL;
-               userData->selectedOption = 0;
-               
-               userData->stageState = STAGE_END;              
-         }
-   }
+         }         
+
+  }
    else if(userData->stageState == STAGE_END) {
       // Use the program object
       glUseProgram ( userData->programObject[IMG_END] );
@@ -1028,7 +1050,7 @@ void Draw ( ESContext *esContext )
       
       glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
       
-      if(userData->gpioStat & 0x020 != 0) {
+      if((userData->gpioStat & 0x020) != 0) {
             if(userData->selectedOption == 0) {
                   // Continue -> select music
                   userData->stageState = STAGE_SELECT_MUSIC;
@@ -1067,12 +1089,20 @@ void ShutDown ( ESContext *esContext )
 
 void Update ( ESContext *esContext, float deltaTime ) {
    UserData *userData = ( UserData* ) esContext->userData;
+
    
-   //deltaTime = 120pbm(4/4 bit), userData->ki->t = bpm of song
-   userData->temp += deltaTime * (userData->ki->t / 120.0);
-   userData->measureBar += deltaTime * (userData->ki->t / 120.0);
+   if(userData->stageState == STAGE_PLAY) {
+      //deltaTime = 120pbm(4/4 bit), userData->ki->t = bpm of song
+      userData->temp += deltaTime * (userData->ki->t / 120.0);
+      userData->measureBar += deltaTime * (userData->ki->t / 120.0);
+   }
+   else {
+      userData->temp += deltaTime;
+   }
+   
    userData->prevGpioStat = userData->gpioStat;
    userData->gpioStat = inputGPIOStat();
+
    if(userData->measureBar > 1.0) {
       userData->measureBar = -1.0;
    }
@@ -1117,9 +1147,15 @@ int main ( int argc, char *argv[] )
    }
    */
 
+   printf("Enter to esMainLoop\n");
+
    esMainLoop ( &esContext );
 
+   printf("Shutdown\n");
+
    ShutDown ( &esContext );
+
+   printf("Goodbye\n");
 
    return 0;
 }
