@@ -484,15 +484,6 @@ void Draw ( ESContext *esContext )
             userData->prevGpioStat = 0x00;
             userData->stageState = STAGE_SELECT_MUSIC;
       }
-      /*
-      if(userData->temp > 0.5) {
-            setOutputGPIO(0x7F0);
-      }
-      else if(userData->temp > 1.0) {
-            setOutputGPIO(0x000);
-            userData->temp = 0;
-      }
-      */
    }
    else if(userData->stageState == STAGE_SELECT_MUSIC) {
       // Use the program object
@@ -1066,6 +1057,7 @@ void Draw ( ESContext *esContext )
          printf("wrong stage number, exit program!");
          exit(1);
    }
+ 
 }
 
 ///
@@ -1112,7 +1104,6 @@ int main ( int argc, char *argv[] )
 {
    ESContext esContext;
    UserData  userData;
-//   pid_t pid;
 
    esInitContext ( &esContext );
    esContext.userData = &userData;
@@ -1125,28 +1116,6 @@ int main ( int argc, char *argv[] )
    esRegisterDrawFunc ( &esContext, Draw );
    esRegisterUpdateFunc ( &esContext, Update );
    
-   /*
-   // Fork for play music
-   pid = fork();
-
-   switch(pid) {
-      case -1:
-      {
-         printf("child process can't be created\n");
-         return -1;
-      }
-      case 0:     // Play music
-      {
-         //system("omxplayer ../songs/ksm/homura/homura.ogg");
-         execlp("omxplayer", "omxplayer", "../songs/ksm/homura/homura_lt_f.ogg");
-      }
-      default:
-      {
-         esMainLoop ( &esContext );
-      }
-   }
-   */
-
    printf("Enter to esMainLoop\n");
 
    esMainLoop ( &esContext );
