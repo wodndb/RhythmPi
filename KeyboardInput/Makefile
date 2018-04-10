@@ -1,5 +1,5 @@
 INCDIR=-I../Libs
-LIBS=-L/opt/vc/lib
+LIBS=-L/opt/vc/lib -lncurses
 
 COMMONSRC=../Libs/rpUtil.c
 COMMONHDR=../Libs/rpUtil.h
