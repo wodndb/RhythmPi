@@ -9,10 +9,7 @@ SRC02=keyEvent.c
 
 default: all
 
-all: kin keyEvent
-
-kin: $(COMMONSRC) $(COMMONHDR) $(SRC)
-	gcc $(COMMONSRC) $(SRC) -o ./$@ $(INCDIR) $(LIBS)
+all: keyEvent
 
 keyEvent: $(COMMONSRC) $(COMMONHDR) $(SRC)
 	gcc $(COMMONSRC) $(SRC02) -o ./$@ $(INCDIR) $(LIBS)

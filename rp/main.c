@@ -1,232 +1,4 @@
-//
-// Book:      OpenGL(R) ES 2.0 Programming Guide
-// Authors:   Aaftab Munshi, Dan Ginsburg, Dave Shreiner
-// ISBN-10:   0321502795
-// ISBN-13:   9780321502797
-// Publisher: Addison-Wesley Professional
-// URLs:      http://safari.informit.com/9780321563835
-//            http://www.opengles-book.com
-//
-
-// Hello_Triangle.c
-//
-//    This is a simple example that draws a single triangle with
-//    a minimal vertex/fragment shader.  The purpose of this 
-//    example is to demonstrate the basic concepts of 
-//    OpenGL ES 2.0 rendering.
-
-#include <stdio.h>
-#include <stdio_ext.h>
-#include <stdlib.h>
-#include <esUtil.h>
-#include <rpUtil.h>
-#include <rpNote.h>
-#include <rpGpio.h>
-#include <kshLoader.h>
-#include <wiringPi.h>
-#include <signal.h>
-
-// Image macro
-#define IMG_MAX_NUM 9
-
-#define IMG_NOTE              0
-#define IMG_GPIO_INPUT        1
-#define IMG_MAIN              2
-#define IMG_SELECT_MENU       3
-#define IMG_OPTION            4
-#define IMG_END               5
-#define IMG_SELECT_CURSOR     6
-#define IMG_GOOD              7
-#define IMG_BAD               8
-
-// Stage state macro
-#define STAGE_MAIN            0x01
-#define STAGE_SELECT_MUSIC    0x02
-#define STAGE_OPTION          0x04
-#define STAGE_PLAY            0x08
-#define STAGE_END             0x10
-#define STAGE_OPTION_SEL_SPD  0x20
-
-typedef struct _user_data
-{
-   // Handle to a program object
-   GLuint programObject[IMG_MAX_NUM];
-   
-   // Attribute locations
-   GLint  positionLoc[IMG_MAX_NUM];
-   GLint  texCoordLoc[IMG_MAX_NUM];
-
-   // Sampler location
-   GLint samplerLoc[IMG_MAX_NUM];
-
-   // Texture handle
-   GLuint textureId[IMG_MAX_NUM];
-
-   char *image[IMG_MAX_NUM];
-   int width[IMG_MAX_NUM], height[IMG_MAX_NUM];
-   
-   // stage state : MAIN / SELECT MUSIC / OPTION / PLAY / END
-   int stageState;
-   // selected music
-   int musicNum;
-   pid_t musicPid;  // process that play music (omxplayer)
-   // selectedOption
-   int selectedOption;
-   int selectedSpeed;
-   int speed;
-   
-   // wodndb data
-   float temp;
-   float measureBar;
-   int prevGpioStat;
-   int gpioStat;
-   FILE* kshFile;
-   KshInfo *ki;
-   QType *qtNote;
-} UserData;
-
-GLfloat vVertices[] = { -0.1f, -0.1f, 0.0f, 
-                        -0.1f,  0.1f, 0.0f,
-                        -0.3f, -0.1f, 0.0f,
-                        -0.3f,  0.1f, 0.0f };
-
-GLfloat vRpVertices[7][20] ={{ -0.4f,  0.1f, 0.0f,  //BT-0
-                                0.0f,  1.0f,
-                               -0.4f, -0.1f, 0.0f,
-                                0.0f,  0.0f,
-                               -0.2f, -0.1f, 0.0f,
-                                1.0f,  0.0f,
-                               -0.2f,  0.1f, 0.0f,
-                                1.0f,  1.0f       },
-                             { -0.2f,  0.1f, 0.0f,  //BT-1
-                                0.0f,  1.0f,
-                               -0.2f, -0.1f, 0.0f,
-                                0.0f,  0.0f,
-                                0.0f, -0.1f, 0.0f,
-                                1.0f,  0.0f,
-                                0.0f,  0.1f, 0.0f,
-                                1.0f,  1.0f       },
-                             {  0.0f,  0.1f, 0.0f,  //BT-2
-                                0.0f,  1.0f,
-                                0.0f, -0.1f, 0.0f,
-                                0.0f,  0.0f,
-                                0.2f, -0.1f, 0.0f,
-                                1.0f,  0.0f,
-                                0.2f,  0.1f, 0.0f,
-                                1.0f,  1.0f       },
-                             {  0.2f,  0.1f, 0.0f,  //BT-3
-                                0.0f,  1.0f,
-                                0.2f, -0.1f, 0.0f,
-                                0.0f,  0.0f,
-                                0.4f, -0.1f, 0.0f,
-                                1.0f,  0.0f,
-                                0.4f,  0.1f, 0.0f,
-                                1.0f,  1.0f       },
-                             {  4.0f,  0.0f, 0.0f,  //blank
-                                0.0f,  1.0f,
-                                4.0f,  0.0f, 0.0f,
-                                0.0f,  0.0f,
-                               -4.0f,  0.0f, 0.0f,
-                                1.0f,  0.0f,
-                               -4.0f,  0.0f, 0.0f,
-                                1.0f,  1.0f       },
-                             { -0.4f,  0.1f, 0.0f,  //FX-L
-                                0.0f,  1.0f,
-                               -0.4f, -0.1f, 0.0f,
-                                0.0f,  0.0f,
-                                0.0f, -0.1f, 0.0f,
-                                1.0f,  0.0f,
-                                0.0f,  0.1f, 0.0f,
-                                1.0f,  1.0f       },
-                             {  0.0f,  0.1f, 0.0f,  //FX-R
-                                0.0f,  1.0f,
-                                0.0f, -0.1f, 0.0f,
-                                0.0f,  0.0f,
-                                0.4f, -0.1f, 0.0f,
-                                1.0f,  0.0f,
-                                0.4f,  0.1f, 0.0f,
-                                1.0f,  1.0f       } };
-
-GLfloat vGpioVertices[6][20] ={{ -0.4f,  0.0f, -0.1f,  //BT-0
-                                  0.0f,  1.0f,
-                                 -0.4f, -1.0f, -0.1f,
-                                  0.0f,  0.0f,
-                                 -0.2f, -1.0f, -0.1f,
-                                  1.0f,  0.0f,
-                                 -0.2f,  0.0f, -0.1f, 
-                                  1.0f,  1.0f       },
-                               { -0.2f,  0.0f, -0.1f,  //BT-1
-                                  0.0f,  1.0f,
-                                 -0.2f, -1.0f, -0.1f,
-                                  0.0f,  0.0f,
-                                  0.0f, -1.0f, -0.1f,
-                                  1.0f,  0.0f,
-                                  0.0f,  0.0f, -0.1f, 
-                                  1.0f,  1.0f       },
-                               {  0.0f,  0.0f, -0.1f,  //BT-2
-                                  0.0f,  1.0f,
-                                  0.0f, -1.0f, -0.1f,
-                                  0.0f,  0.0f,
-                                  0.2f, -1.0f, -0.1f,
-                                  1.0f,  0.0f,
-                                  0.2f,  0.0f, -0.1f, 
-                                  1.0f,  1.0f       },
-                               {  0.2f,  0.0f, -0.1f,  //BT-3
-                                  0.0f,  1.0f,
-                                  0.2f, -1.0f, -0.1f,
-                                  0.0f,  0.0f,
-                                  0.4f, -1.0f, -0.1f,
-                                  1.0f,  0.0f,
-                                  0.4f,  0.0f, -0.1f, 
-                                  1.0f,  1.0f       },
-                               { -0.4f,  0.0f, -0.1f,  //FX-L
-                                  0.0f,  1.0f,
-                                 -0.4f, -1.0f, -0.1f,
-                                  0.0f,  0.0f,
-                                  0.0f, -1.0f, -0.1f,
-                                  1.0f,  0.0f,
-                                  0.0f,  0.0f, -0.1f, 
-                                  1.0f,  1.0f       },
-                               {  0.0f,  0.0f, -0.1f,  //FX-R
-                                  0.0f,  1.0f,
-                                  0.0f, -1.0f, -0.1f,
-                                  0.0f,  0.0f,
-                                  0.4f, -1.0f, -0.1f,
-                                  1.0f,  0.0f,
-                                  0.4f,  0.0f, -0.1f, 
-                                  1.0f,  1.0f       } };
- 
-GLfloat vFullScreen[] = { -1.0f,  1.0f, -0.1f,
-                           0.0f,  1.0f,
-                          -1.0f, -1.0f, -0.1f,
-                           0.0f,  0.0f,
-                           1.0f, -1.0f, -0.1f,
-                           1.0f,  0.0f,
-                           1.0f,  1.0f, -0.1f, 
-                           1.0f,  1.0f       };
-                           
-GLfloat vMusicSelect[] = { -0.75f,  0.7f,  0.1f,
-                            0.0f,  1.0f,
-                           -0.75f,  0.5f,  0.1f,
-                            0.0f,  0.0f,
-                           -0.6f,  0.5f,  0.1f,
-                            1.0f,  0.0f,
-                           -0.6f,  0.7f,  0.1f, 
-                            1.0f,  1.0f       };
-                            
-GLfloat vSpeedSelect[] = { -0.8f,  0.46f,  0.1f,
-                            0.0f,  1.0f,
-                           -0.8f,  0.36f,  0.1f,
-                            0.0f,  0.0f,
-                           -0.6f,  0.36f,  0.1f,
-                            1.0f,  0.0f,
-                           -0.6f,  0.46f,  0.1f, 
-                            1.0f,  1.0f       };
- 
-GLfloat tVertices[] = {  0.2f, -0.1f, 0.0f, 
-                         0.2f,  0.1f, 0.0f,
-                        -0.2f, -0.1f, 0.0f,
-			      -0.2f,  0.1f, 0.0f };
+#include "main.h"
 
 ///
 // Create a simple 2x2 texture image with four different colors
@@ -318,8 +90,6 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
 int Init ( ESContext *esContext )
 {
    int i;
-   int width, height;
-   char* image;
    char imageName[IMG_MAX_NUM][80] = {"../img/note.tga",
                                       "../img/gpio_input.tga",
                                       "../img/main.tga",
@@ -417,6 +187,33 @@ int Init ( ESContext *esContext )
    return GL_TRUE;
 }
 
+void loadImage(ESContext *esContext, int imageID, GLfloat* imageVertex) {
+	GLushort indices[] = {0, 1, 2, 0, 2, 3};
+	UserData *userData = (UserData*)esContext->userData;
+
+	// Use the program object
+	glUseProgram ( userData->programObject[imageID] );
+
+	// Load the vertex position
+	glVertexAttribPointer ( userData->positionLoc[imageID], 3, GL_FLOAT, 
+							GL_FALSE, 5 * sizeof(GLfloat), imageVertex );
+	// Load the texture coordinate
+	glVertexAttribPointer ( userData->texCoordLoc[imageID], 2, GL_FLOAT,
+							GL_FALSE, 5 * sizeof(GLfloat), &imageVertex[3] );
+
+	glEnableVertexAttribArray ( userData->positionLoc[imageID] );
+	glEnableVertexAttribArray ( userData->texCoordLoc[imageID] );
+
+	// Bind the texture
+	glActiveTexture ( GL_TEXTURE0 );
+	glBindTexture ( GL_TEXTURE_2D, userData->textureId[imageID] );
+
+	// Set the sampler texture unit to 0
+	glUniform1i ( userData->samplerLoc[imageID], 0 );
+
+	glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
+}
+
 ///
 // Draw a triangle using the shader pair created in Init()
 //
@@ -425,13 +222,11 @@ void Draw ( ESContext *esContext )
    int i = 0;
    pid_t pid;
    int hittedGpioStat = 0x00;
-   int selectOption = 0;
    float lowNoteWidth = 0;
    float highNoteWidth = 0;
    UserData *userData = ( UserData* ) esContext->userData;
    QNode* tempQNode = NULL;
    FILE* cmdStream;
-   char cmdBuffer[200];
    int cmdPid;
 
    char musicKshFile[4][80] = {"../songs/ksm/colorfulsky/colorfulsky_lt.ksh",
@@ -457,28 +252,7 @@ void Draw ( ESContext *esContext )
    glClear ( GL_COLOR_BUFFER_BIT );
 
    if(userData->stageState == STAGE_MAIN) {
-      // Use the program object
-      glUseProgram ( userData->programObject[IMG_MAIN] );
-      
-      // Load the vertex position
-      glVertexAttribPointer ( userData->positionLoc[IMG_MAIN], 3, GL_FLOAT, 
-                              GL_FALSE, 5 * sizeof(GLfloat), vFullScreen );
-      // Load the texture coordinate
-      glVertexAttribPointer ( userData->texCoordLoc[IMG_MAIN], 2, GL_FLOAT,
-                              GL_FALSE, 5 * sizeof(GLfloat), &vFullScreen[3] );
-      
-      glEnableVertexAttribArray ( userData->positionLoc[IMG_MAIN] );
-      glEnableVertexAttribArray ( userData->texCoordLoc[IMG_MAIN] );
-      
-      // Bind the texture
-      glActiveTexture ( GL_TEXTURE0 );
-      glBindTexture ( GL_TEXTURE_2D, userData->textureId[IMG_MAIN] );
-      
-      // Set the sampler texture unit to 0
-      glUniform1i ( userData->samplerLoc[IMG_MAIN], 0 );
-      
-      glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
-      
+	  loadImage(esContext, IMG_MAIN, vFullScreen);
       if((userData->gpioStat & 0x7F0) != 0 && (userData->prevGpioStat & 0x7F0) == 0) {
             userData->gpioStat = 0x00;
             userData->prevGpioStat = 0x00;
@@ -486,27 +260,7 @@ void Draw ( ESContext *esContext )
       }
    }
    else if(userData->stageState == STAGE_SELECT_MUSIC) {
-      // Use the program object
-      glUseProgram ( userData->programObject[IMG_SELECT_MENU] );
-      
-      // Load the vertex position
-      glVertexAttribPointer ( userData->positionLoc[IMG_SELECT_MENU], 3, GL_FLOAT, 
-                              GL_FALSE, 5 * sizeof(GLfloat), vFullScreen );
-      // Load the texture coordinate
-      glVertexAttribPointer ( userData->texCoordLoc[IMG_SELECT_MENU], 2, GL_FLOAT,
-                              GL_FALSE, 5 * sizeof(GLfloat), &vFullScreen[3] );
-      
-      glEnableVertexAttribArray ( userData->positionLoc[IMG_SELECT_MENU] );
-      glEnableVertexAttribArray ( userData->texCoordLoc[IMG_SELECT_MENU] );
-      
-      // Bind the texture
-      glActiveTexture ( GL_TEXTURE0 );
-      glBindTexture ( GL_TEXTURE_2D, userData->textureId[IMG_SELECT_MENU] );
-      
-      // Set the sampler texture unit to 0
-      glUniform1i ( userData->samplerLoc[IMG_SELECT_MENU], 0 );
-      
-      glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
+	  loadImage(esContext, IMG_SELECT_MENU, vFullScreen);
       
       setOutputGPIO(userData->gpioStat);
       
@@ -521,30 +275,10 @@ void Draw ( ESContext *esContext )
       vMusicSelect[6] = 0.21 - (0.24 * userData->musicNum);
       vMusicSelect[11] = 0.21 - (0.24 * userData->musicNum);
       vMusicSelect[16] = 0.41 - (0.24 * userData->musicNum);
-      
-      // Use the program object
-      glUseProgram ( userData->programObject[IMG_SELECT_CURSOR] );
-      
-      // Load the vertex position
-      glVertexAttribPointer ( userData->positionLoc[IMG_SELECT_CURSOR], 3, GL_FLOAT, 
-                              GL_FALSE, 5 * sizeof(GLfloat), vMusicSelect );
-      // Load the texture coordinate
-      glVertexAttribPointer ( userData->texCoordLoc[IMG_SELECT_CURSOR], 2, GL_FLOAT,
-                              GL_FALSE, 5 * sizeof(GLfloat), &vMusicSelect[3] );
-      
-      glEnableVertexAttribArray ( userData->positionLoc[IMG_SELECT_CURSOR] );
-      glEnableVertexAttribArray ( userData->texCoordLoc[IMG_SELECT_CURSOR] );
-      
-      // Bind the texture
-      glActiveTexture ( GL_TEXTURE0 );
-      glBindTexture ( GL_TEXTURE_2D, userData->textureId[IMG_SELECT_CURSOR] );
-      
-      // Set the sampler texture unit to 0
-      glUniform1i ( userData->samplerLoc[IMG_SELECT_CURSOR], 0 );
-      
-      glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
-      
-      if((userData->gpioStat & 0x020) != 0 && (userData->prevGpioStat & 0x020) == 0) {
+ 	
+	  loadImage(esContext, IMG_SELECT_CURSOR, vMusicSelect);
+
+	  if((userData->gpioStat & 0x020) != 0 && (userData->prevGpioStat & 0x020) == 0) {
             userData->stageState = STAGE_PLAY;
             
             //Please load ksh file and set music
@@ -591,29 +325,9 @@ void Draw ( ESContext *esContext )
       
    }
    else if(userData->stageState == STAGE_OPTION) {
-      // Use the program object
-      glUseProgram ( userData->programObject[IMG_OPTION] );
-      
-      // Load the vertex position
-      glVertexAttribPointer ( userData->positionLoc[IMG_OPTION], 3, GL_FLOAT, 
-                              GL_FALSE, 5 * sizeof(GLfloat), vFullScreen );
-      // Load the texture coordinate
-      glVertexAttribPointer ( userData->texCoordLoc[IMG_OPTION], 2, GL_FLOAT,
-                              GL_FALSE, 5 * sizeof(GLfloat), &vFullScreen[3] );
-      
-      glEnableVertexAttribArray ( userData->positionLoc[IMG_OPTION] );
-      glEnableVertexAttribArray ( userData->texCoordLoc[IMG_OPTION] );
-      
-      // Bind the texture
-      glActiveTexture ( GL_TEXTURE0 );
-      glBindTexture ( GL_TEXTURE_2D, userData->textureId[IMG_OPTION] );
-      
-      // Set the sampler texture unit to 0
-      glUniform1i ( userData->samplerLoc[IMG_OPTION], 0 );
-      
-      glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
-      
-      setOutputGPIO(userData->gpioStat);
+ 	  loadImage(esContext, IMG_OPTION, vFullScreen);
+
+	  setOutputGPIO(userData->gpioStat);
       
       if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_RIGHT) {
             userData->selectedOption = (userData->selectedOption + 1) % 4;
@@ -627,27 +341,7 @@ void Draw ( ESContext *esContext )
       vMusicSelect[11] = 0.3 - (0.32 * userData->selectedOption);
       vMusicSelect[16] = 0.5 - (0.32 * userData->selectedOption);
       
-      // Use the program object
-      glUseProgram ( userData->programObject[IMG_SELECT_CURSOR] );
-      
-      // Load the vertex position
-      glVertexAttribPointer ( userData->positionLoc[IMG_SELECT_CURSOR], 3, GL_FLOAT, 
-                              GL_FALSE, 5 * sizeof(GLfloat), vMusicSelect );
-      // Load the texture coordinate
-      glVertexAttribPointer ( userData->texCoordLoc[IMG_SELECT_CURSOR], 2, GL_FLOAT,
-                              GL_FALSE, 5 * sizeof(GLfloat), &vMusicSelect[3] );
-      
-      glEnableVertexAttribArray ( userData->positionLoc[IMG_SELECT_CURSOR] );
-      glEnableVertexAttribArray ( userData->texCoordLoc[IMG_SELECT_CURSOR] );
-      
-      // Bind the texture
-      glActiveTexture ( GL_TEXTURE0 );
-      glBindTexture ( GL_TEXTURE_2D, userData->textureId[IMG_SELECT_CURSOR] );
-      
-      // Set the sampler texture unit to 0
-      glUniform1i ( userData->samplerLoc[IMG_SELECT_CURSOR], 0 );
-      
-      glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
+	  loadImage(esContext, IMG_SELECT_CURSOR, vMusicSelect);
       
       if((userData->gpioStat & 0x020) != 0 && (userData->prevGpioStat & 0x020) == 0) {
             //Reset ksh data -> to do in play music;
@@ -707,27 +401,7 @@ void Draw ( ESContext *esContext )
       }
    }
    else if(userData->stageState == STAGE_OPTION_SEL_SPD) {
-      // Use the program object
-      glUseProgram ( userData->programObject[IMG_OPTION] );
-      
-      // Load the vertex position
-      glVertexAttribPointer ( userData->positionLoc[IMG_OPTION], 3, GL_FLOAT, 
-                              GL_FALSE, 5 * sizeof(GLfloat), vFullScreen );
-      // Load the texture coordinate
-      glVertexAttribPointer ( userData->texCoordLoc[IMG_OPTION], 2, GL_FLOAT,
-                              GL_FALSE, 5 * sizeof(GLfloat), &vFullScreen[3] );
-      
-      glEnableVertexAttribArray ( userData->positionLoc[IMG_OPTION] );
-      glEnableVertexAttribArray ( userData->texCoordLoc[IMG_OPTION] );
-      
-      // Bind the texture
-      glActiveTexture ( GL_TEXTURE0 );
-      glBindTexture ( GL_TEXTURE_2D, userData->textureId[IMG_OPTION] );
-      
-      // Set the sampler texture unit to 0
-      glUniform1i ( userData->samplerLoc[IMG_OPTION], 0 );
-      
-      glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
+	  loadImage(esContext, IMG_OPTION, vFullScreen);
       
       setOutputGPIO(userData->gpioStat);
       
@@ -744,27 +418,7 @@ void Draw ( ESContext *esContext )
       vSpeedSelect[10] = -0.09 + (0.23 * userData->selectedSpeed);
       vSpeedSelect[15] = -0.09 + (0.23 * userData->selectedSpeed);
       
-      // Use the program object
-      glUseProgram ( userData->programObject[IMG_SELECT_CURSOR] );
-      
-      // Load the vertex position
-      glVertexAttribPointer ( userData->positionLoc[IMG_SELECT_CURSOR], 3, GL_FLOAT, 
-                              GL_FALSE, 5 * sizeof(GLfloat), vSpeedSelect );
-      // Load the texture coordinate
-      glVertexAttribPointer ( userData->texCoordLoc[IMG_SELECT_CURSOR], 2, GL_FLOAT,
-                              GL_FALSE, 5 * sizeof(GLfloat), &vSpeedSelect[3] );
-      
-      glEnableVertexAttribArray ( userData->positionLoc[IMG_SELECT_CURSOR] );
-      glEnableVertexAttribArray ( userData->texCoordLoc[IMG_SELECT_CURSOR] );
-      
-      // Bind the texture
-      glActiveTexture ( GL_TEXTURE0 );
-      glBindTexture ( GL_TEXTURE_2D, userData->textureId[IMG_SELECT_CURSOR] );
-      
-      // Set the sampler texture unit to 0
-      glUniform1i ( userData->samplerLoc[IMG_SELECT_CURSOR], 0 );
-      
-      glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
+	  loadImage(esContext, IMG_SELECT_CURSOR, vSpeedSelect);
       
       setOutputGPIO(userData->gpioStat);
       
@@ -847,37 +501,13 @@ void Draw ( ESContext *esContext )
             }
          }
          
-         glUseProgram ( userData->programObject[IMG_GPIO_INPUT] );
          // Draw about input from GPIO
          for(i = 9; i >= 4; i--) {
             if( (userData->gpioStat & (0x01 << i)) >> i == 0x01 ) {
-               //glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, vGpioVertices[9 - i] );
-               //glEnableVertexAttribArray( 0 );
-               //glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-               
-      
-               // Load the vertex position
-               glVertexAttribPointer ( userData->positionLoc[IMG_GPIO_INPUT], 3, GL_FLOAT, 
-                                       GL_FALSE, 5 * sizeof(GLfloat), vGpioVertices[9 - i] );
-               // Load the texture coordinate
-               glVertexAttribPointer ( userData->texCoordLoc[IMG_GPIO_INPUT], 2, GL_FLOAT,
-                                       GL_FALSE, 5 * sizeof(GLfloat), &vGpioVertices[9 - i][3] );
-            
-               glEnableVertexAttribArray ( userData->positionLoc[IMG_GPIO_INPUT] );
-               glEnableVertexAttribArray ( userData->texCoordLoc[IMG_GPIO_INPUT] );
-            
-               // Bind the texture
-               glActiveTexture ( GL_TEXTURE0 );
-               glBindTexture ( GL_TEXTURE_2D, userData->textureId[IMG_GPIO_INPUT] );
-            
-               // Set the sampler texture unit to 0
-               glUniform1i ( userData->samplerLoc[IMG_GPIO_INPUT], 0 );
-            
-               glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
+			   loadImage(esContext, IMG_GPIO_INPUT, vGpioVertices[9-i]);
             }
          }
         
-         glUseProgram ( userData->programObject[IMG_NOTE] );
          // Draw notes
          while(tempQNode->link != NULL) {
             for(i = 0; i <= 6; i++) {
@@ -914,25 +544,8 @@ void Draw ( ESContext *esContext )
                                       - userData->temp - lowNoteWidth;
                   vRpVertices[i][16] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
                                        - userData->temp + highNoteWidth;
-       
-                  // Load the vertex position
-                  glVertexAttribPointer ( userData->positionLoc[IMG_NOTE], 3, GL_FLOAT,
-                                          GL_FALSE, 5 * sizeof(GLfloat), vRpVertices[i] );
-                  // Load the texture coordinate
-                  glVertexAttribPointer ( userData->texCoordLoc[IMG_NOTE], 2, GL_FLOAT,
-                                          GL_FALSE, 5 * sizeof(GLfloat), &vRpVertices[i][3] );
-      
-                  glEnableVertexAttribArray( userData->positionLoc[IMG_NOTE] );
-                  glEnableVertexAttribArray( userData->texCoordLoc[IMG_NOTE] );
-      
-                  // Bind the texture
-                  glActiveTexture ( GL_TEXTURE0 );
-                  glBindTexture ( GL_TEXTURE_2D, userData->textureId[IMG_NOTE] );
-      
-                  // Set the sampler texture unit to 0
-                  glUniform1i ( userData->samplerLoc[IMG_NOTE], 0 );
-               
-                  glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
+       			  
+				  loadImage(esContext, IMG_NOTE, vRpVertices[i]);
                }
             }
             tempQNode = tempQNode->link;
@@ -982,27 +595,7 @@ void Draw ( ESContext *esContext )
 
   }
    else if(userData->stageState == STAGE_END) {
-      // Use the program object
-      glUseProgram ( userData->programObject[IMG_END] );
-      
-      // Load the vertex position
-      glVertexAttribPointer ( userData->positionLoc[IMG_END], 3, GL_FLOAT, 
-                              GL_FALSE, 5 * sizeof(GLfloat), vFullScreen );
-      // Load the texture coordinate
-      glVertexAttribPointer ( userData->texCoordLoc[IMG_END], 2, GL_FLOAT,
-                              GL_FALSE, 5 * sizeof(GLfloat), &vFullScreen[3] );
-      
-      glEnableVertexAttribArray ( userData->positionLoc[IMG_END] );
-      glEnableVertexAttribArray ( userData->texCoordLoc[IMG_END] );
-      
-      // Bind the texture
-      glActiveTexture ( GL_TEXTURE0 );
-      glBindTexture ( GL_TEXTURE_2D, userData->textureId[IMG_END] );
-      
-      // Set the sampler texture unit to 0
-      glUniform1i ( userData->samplerLoc[IMG_END], 0 );
-      
-      glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
+	  loadImage(esContext, IMG_END, vFullScreen);
       
       // LED Enable
       setOutputGPIO(userData->gpioStat);
@@ -1018,29 +611,9 @@ void Draw ( ESContext *esContext )
       vMusicSelect[6] = -0.4 - (0.2 * userData->selectedOption);
       vMusicSelect[11] = -0.4 - (0.2 * userData->selectedOption);
       vMusicSelect[16] = -0.2 - (0.2 * userData->selectedOption);
-      
-      // Use the program object
-      glUseProgram ( userData->programObject[IMG_SELECT_CURSOR] );
-      
-      // Load the vertex position
-      glVertexAttribPointer ( userData->positionLoc[IMG_SELECT_CURSOR], 3, GL_FLOAT, 
-                              GL_FALSE, 5 * sizeof(GLfloat), vMusicSelect );
-      // Load the texture coordinate
-      glVertexAttribPointer ( userData->texCoordLoc[IMG_SELECT_CURSOR], 2, GL_FLOAT,
-                              GL_FALSE, 5 * sizeof(GLfloat), &vMusicSelect[3] );
-      
-      glEnableVertexAttribArray ( userData->positionLoc[IMG_SELECT_CURSOR] );
-      glEnableVertexAttribArray ( userData->texCoordLoc[IMG_SELECT_CURSOR] );
-      
-      // Bind the texture
-      glActiveTexture ( GL_TEXTURE0 );
-      glBindTexture ( GL_TEXTURE_2D, userData->textureId[IMG_SELECT_CURSOR] );
-      
-      // Set the sampler texture unit to 0
-      glUniform1i ( userData->samplerLoc[IMG_SELECT_CURSOR], 0 );
-      
-      glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
-      
+ 
+	  loadImage(esContext, IMG_SELECT_CURSOR, vMusicSelect);
+            
       if((userData->gpioStat & 0x020) != 0) {
             if(userData->selectedOption == 0) {
                   // Continue -> select music
