@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdio_ext.h>
 #include <stdlib.h>
+#include <string.h>
 #include <esUtil.h>
 #include <rpUtil.h>
 #include <rpNote.h>
@@ -8,6 +9,9 @@
 #include <kshLoader.h>
 #include <wiringPi.h>
 #include <signal.h>
+#include <linux/input.h>		
+#include <errno.h>		/* check error */
+#include <fcntl.h>		/* file control */
 
 // Image macro
 #define IMG_MAX_NUM 9
@@ -30,8 +34,19 @@
 #define STAGE_END             0x10
 #define STAGE_OPTION_SEL_SPD  0x20
 
-typedef struct _user_data
-{
+typedef struct _key_event {
+	//GPIO
+	int prevGpioStat;
+	int gpioStat;
+
+	//Keyboard
+	char* dev;
+	struct input_event ev;
+	ssize_t n;
+	int fd;
+} KeyEvent;
+
+typedef struct _gl_data {
 	// Handle to a program object
 	GLuint programObject[IMG_MAX_NUM];
 
@@ -47,25 +62,38 @@ typedef struct _user_data
 
 	char *image[IMG_MAX_NUM];
 	int width[IMG_MAX_NUM], height[IMG_MAX_NUM];
+} GLData;
 
+typedef struct _game_state {
 	// stage state : MAIN / SELECT MUSIC / OPTION / PLAY / END
 	int stageState;
-	// selected music
-	int musicNum;
-	pid_t musicPid;  // process that play music (omxplayer)
 	// selectedOption
 	int selectedOption;
 	int selectedSpeed;
+} GameState;
+
+typedef struct _music_data {
+	// Selected music
+	int musicNum;
+	pid_t musicPid;	// process that play music (omxplayer)
+
 	int speed;
 
-	// wodndb data
+	// Music Play Data
 	float temp;
 	float measureBar;
-	int prevGpioStat;
-	int gpioStat;
 	FILE* kshFile;
 	KshInfo *ki;
 	QType *qtNote;
+
+} MusicData;
+
+typedef struct _user_data
+{
+	GLData glData;
+	GameState gameState;
+	MusicData musicData;
+	KeyEvent keyEvent;
 } UserData;
 
 GLfloat vVertices[] = { -0.1f, -0.1f, 0.0f, 

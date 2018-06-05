@@ -9,7 +9,7 @@ GLuint CreateSimpleTexture2D(ESContext *esContext, int imageIndex)
    GLuint textureId;
    UserData *userData = esContext->userData;
    
-   GLubyte *pixels = userData->image[imageIndex];
+   GLubyte *pixels = userData->glData.image[imageIndex];
 
    printf("Create Simple Texture 2D\n");
 
@@ -25,7 +25,7 @@ GLuint CreateSimpleTexture2D(ESContext *esContext, int imageIndex)
 
    // Load the texture
    glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, 
-		  userData->width[imageIndex], userData->height[imageIndex], 
+		  userData->glData.width[imageIndex], userData->glData.height[imageIndex], 
 		  0, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
 
 
@@ -124,62 +124,46 @@ int Init ( ESContext *esContext )
 
    for(i = 0; i < IMG_MAX_NUM; i++) {
          printf("load image : %s\n", imageName[i]);
-         userData->image[i] = esLoadTGA(imageName[i], &userData->width[i], &userData->height[i]);
-         if (userData->image[i] == NULL) {
+         userData->glData.image[i] = esLoadTGA(imageName[i], &userData->glData.width[i], &userData->glData.height[i]);
+         if (userData->glData.image[i] == NULL) {
              fprintf(stderr, "No such image\n");
              exit(1);
          }
-         printf("Width %d height %d\n", userData->width[i], userData->height[i]);
+         printf("Width %d height %d\n", userData->glData.width[i], userData->glData.height[i]);
       
          printf("Load the shaders and get a linked program object\n");
       
          // Load the shaders and get a linked program object
-         userData->programObject[i] = esLoadProgram ( vShaderStr, fShaderStr );
+         userData->glData.programObject[i] = esLoadProgram ( vShaderStr, fShaderStr );
       
          // Get the attribute locations
-         userData->positionLoc[i] = glGetAttribLocation ( userData->programObject[i], "a_position" );
-         userData->texCoordLoc[i] = glGetAttribLocation ( userData->programObject[i], "a_texCoord" );
+         userData->glData.positionLoc[i] = glGetAttribLocation ( userData->glData.programObject[i], "a_position" );
+         userData->glData.texCoordLoc[i] = glGetAttribLocation ( userData->glData.programObject[i], "a_texCoord" );
       
          printf("get sampler location\n");
          
          // Get the sampler location
-         userData->samplerLoc[i] = glGetUniformLocation ( userData->programObject[i], "s_texture" );
+         userData->glData.samplerLoc[i] = glGetUniformLocation ( userData->glData.programObject[i], "s_texture" );
       
          printf("load texture\n");
       
          // Load the texture
-         userData->textureId[i] = CreateSimpleTexture2D (esContext, i);
+         userData->glData.textureId[i] = CreateSimpleTexture2D (esContext, i);
    }
 
 
-   userData->stageState = STAGE_MAIN;
-   userData->musicNum = 0;
-   userData->musicPid = 0;
-   
-   userData->selectedOption = 0;
-   userData->selectedSpeed = 1;
-   userData->speed = 1;
+   userData->musicData.musicNum = 0;
+   userData->musicData.musicPid = 0;
+   userData->musicData.speed = 1;
 
-   /*
-   printf("Load ksh data\n");
-   //getKshData
-   userData->ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
-   userData->kshFile = fopen("../kshLoader/test.ksh", "r");
-   userData->qtNote = (QType*)malloc(1 * sizeof(QType));
-   userData->temp = -2.0;
-
-   if(userData->kshFile == NULL) {
-      printf("file load error!\n");
-   }
-
-   getKshInfo(userData->kshFile, userData->ki);
-   loadKshNote(userData->kshFile, userData->qtNote);
-   */
+   userData->gameState.stageState = STAGE_MAIN;
+   userData->gameState.selectedOption = 0;
+   userData->gameState.selectedSpeed = 1;
 
    // GPIO Initialization
    initPinMode();
-   userData->gpioStat = 0x00;
-   userData->prevGpioStat = 0x00;
+   userData->keyEvent.gpioStat = 0x00;
+   userData->keyEvent.prevGpioStat = 0x00;
 
    printf("Start registering es functions\n");
 
@@ -192,24 +176,24 @@ void loadImage(ESContext *esContext, int imageID, GLfloat* imageVertex) {
 	UserData *userData = (UserData*)esContext->userData;
 
 	// Use the program object
-	glUseProgram ( userData->programObject[imageID] );
+	glUseProgram ( userData->glData.programObject[imageID] );
 
 	// Load the vertex position
-	glVertexAttribPointer ( userData->positionLoc[imageID], 3, GL_FLOAT, 
+	glVertexAttribPointer ( userData->glData.positionLoc[imageID], 3, GL_FLOAT, 
 							GL_FALSE, 5 * sizeof(GLfloat), imageVertex );
 	// Load the texture coordinate
-	glVertexAttribPointer ( userData->texCoordLoc[imageID], 2, GL_FLOAT,
+	glVertexAttribPointer ( userData->glData.texCoordLoc[imageID], 2, GL_FLOAT,
 							GL_FALSE, 5 * sizeof(GLfloat), &imageVertex[3] );
 
-	glEnableVertexAttribArray ( userData->positionLoc[imageID] );
-	glEnableVertexAttribArray ( userData->texCoordLoc[imageID] );
+	glEnableVertexAttribArray ( userData->glData.positionLoc[imageID] );
+	glEnableVertexAttribArray ( userData->glData.texCoordLoc[imageID] );
 
 	// Bind the texture
 	glActiveTexture ( GL_TEXTURE0 );
-	glBindTexture ( GL_TEXTURE_2D, userData->textureId[imageID] );
+	glBindTexture ( GL_TEXTURE_2D, userData->glData.textureId[imageID] );
 
 	// Set the sampler texture unit to 0
-	glUniform1i ( userData->samplerLoc[imageID], 0 );
+	glUniform1i ( userData->glData.samplerLoc[imageID], 0 );
 
 	glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices );
 }
@@ -241,8 +225,8 @@ void Draw ( ESContext *esContext )
    
    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-   if(userData->stageState == STAGE_PLAY) {
-      tempQNode = userData->qtNote->front;
+   if(userData->gameState.stageState == STAGE_PLAY) {
+      tempQNode = userData->musicData.qtNote->front;
    }
 
    // Set the viewport
@@ -251,53 +235,54 @@ void Draw ( ESContext *esContext )
    // Clear the color buffer
    glClear ( GL_COLOR_BUFFER_BIT );
 
-   if(userData->stageState == STAGE_MAIN) {
+   if(userData->gameState.stageState == STAGE_MAIN) {
 	  loadImage(esContext, IMG_MAIN, vFullScreen);
-      if((userData->gpioStat & 0x7F0) != 0 && (userData->prevGpioStat & 0x7F0) == 0) {
-            userData->gpioStat = 0x00;
-            userData->prevGpioStat = 0x00;
-            userData->stageState = STAGE_SELECT_MUSIC;
+      if((userData->keyEvent.gpioStat & 0x7F0) != 0 &&
+			  (userData->keyEvent.prevGpioStat & 0x7F0) == 0) {
+            userData->keyEvent.gpioStat = 0x00;
+            userData->keyEvent.prevGpioStat = 0x00;
+            userData->gameState.stageState = STAGE_SELECT_MUSIC;
       }
    }
-   else if(userData->stageState == STAGE_SELECT_MUSIC) {
+   else if(userData->gameState.stageState == STAGE_SELECT_MUSIC) {
 	  loadImage(esContext, IMG_SELECT_MENU, vFullScreen);
       
-      setOutputGPIO(userData->gpioStat);
+      setOutputGPIO(userData->keyEvent.gpioStat);
       
-      if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_RIGHT) {
-            userData->musicNum = (userData->musicNum + 3) % 4;
+      if(checkRotDirection(userData->keyEvent.prevGpioStat, userData->keyEvent.gpioStat, 1) == ROT_RIGHT) {
+            userData->musicData.musicNum = (userData->musicData.musicNum + 3) % 4;
       }
-      else if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_LEFT) {
-            userData->musicNum = (userData->musicNum + 1) % 4;
+      else if(checkRotDirection(userData->keyEvent.prevGpioStat, userData->keyEvent.gpioStat, 1) == ROT_LEFT) {
+            userData->musicData.musicNum = (userData->musicData.musicNum + 1) % 4;
       }
       
-      vMusicSelect[1] = 0.41 - (0.24 * userData->musicNum);
-      vMusicSelect[6] = 0.21 - (0.24 * userData->musicNum);
-      vMusicSelect[11] = 0.21 - (0.24 * userData->musicNum);
-      vMusicSelect[16] = 0.41 - (0.24 * userData->musicNum);
+      vMusicSelect[1] = 0.41 - (0.24 * userData->musicData.musicNum);
+      vMusicSelect[6] = 0.21 - (0.24 * userData->musicData.musicNum);
+      vMusicSelect[11] = 0.21 - (0.24 * userData->musicData.musicNum);
+      vMusicSelect[16] = 0.41 - (0.24 * userData->musicData.musicNum);
  	
 	  loadImage(esContext, IMG_SELECT_CURSOR, vMusicSelect);
 
-	  if((userData->gpioStat & 0x020) != 0 && (userData->prevGpioStat & 0x020) == 0) {
-            userData->stageState = STAGE_PLAY;
+	  if((userData->keyEvent.gpioStat & 0x020) != 0 && (userData->keyEvent.prevGpioStat & 0x020) == 0) {
+            userData->gameState.stageState = STAGE_PLAY;
             
             //Please load ksh file and set music
             printf("Load ksh data\n");
             //getKshData
-            userData->ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
-            userData->kshFile = fopen(musicKshFile[userData->musicNum], "r");
-            userData->qtNote = (QType*)malloc(1 * sizeof(QType));
+            userData->musicData.ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
+            userData->musicData.kshFile = fopen(musicKshFile[userData->musicData.musicNum], "r");
+            userData->musicData.qtNote = (QType*)malloc(1 * sizeof(QType));
       
-            if(userData->kshFile == NULL) {
+            if(userData->musicData.kshFile == NULL) {
                printf("file load error!\n");
-               printf("filename : %s\n", musicKshFile[userData->musicNum]);
+               printf("filename : %s\n", musicKshFile[userData->musicData.musicNum]);
                exit(1);
             }
       
-            getKshInfo(userData->kshFile, userData->ki);
-            loadKshNote(userData->kshFile, userData->qtNote);
+            getKshInfo(userData->musicData.kshFile, userData->musicData.ki);
+            loadKshNote(userData->musicData.kshFile, userData->musicData.qtNote);
 
-            userData->temp = -1.0 * ((float)(userData->ki->t - 100) / 80.0 * 3.0);
+            userData->musicData.temp = -1.0 * ((float)(userData->musicData.ki->t - 100) / 80.0 * 3.0);
 
             
             // Fork for play music
@@ -312,63 +297,63 @@ void Draw ( ESContext *esContext )
                case 0:     // Play music
                {
                   //system("omxplayer ../songs/ksm/homura/homura.ogg");
-                  execlp("omxplayer", "omxplayer", musicOggFile[userData->musicNum], NULL);
+                  execlp("omxplayer", "omxplayer", musicOggFile[userData->musicData.musicNum], NULL);
                }
                default:
                {
-                  userData->musicPid = pid;
+                  userData->musicData.musicPid = pid;
                }
            }
       }
       
-      setOutputGPIO(userData->gpioStat);
+      setOutputGPIO(userData->keyEvent.gpioStat);
       
    }
-   else if(userData->stageState == STAGE_OPTION) {
+   else if(userData->gameState.stageState == STAGE_OPTION) {
  	  loadImage(esContext, IMG_OPTION, vFullScreen);
 
-	  setOutputGPIO(userData->gpioStat);
+	  setOutputGPIO(userData->keyEvent.gpioStat);
       
-      if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_RIGHT) {
-            userData->selectedOption = (userData->selectedOption + 1) % 4;
+      if(checkRotDirection(userData->keyEvent.prevGpioStat, userData->keyEvent.gpioStat, 1) == ROT_RIGHT) {
+            userData->gameState.selectedOption = (userData->gameState.selectedOption + 1) % 4;
       }
-      else if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_LEFT) {
-            userData->selectedOption = (userData->selectedOption + 3) % 4;
+      else if(checkRotDirection(userData->keyEvent.prevGpioStat, userData->keyEvent.gpioStat, 1) == ROT_LEFT) {
+            userData->gameState.selectedOption = (userData->gameState.selectedOption + 3) % 4;
       }
       
-      vMusicSelect[1] = 0.5 - (0.32 * userData->selectedOption);
-      vMusicSelect[6] = 0.3 - (0.32 * userData->selectedOption);
-      vMusicSelect[11] = 0.3 - (0.32 * userData->selectedOption);
-      vMusicSelect[16] = 0.5 - (0.32 * userData->selectedOption);
+      vMusicSelect[1] = 0.5 - (0.32 * userData->gameState.selectedOption);
+      vMusicSelect[6] = 0.3 - (0.32 * userData->gameState.selectedOption);
+      vMusicSelect[11] = 0.3 - (0.32 * userData->gameState.selectedOption);
+      vMusicSelect[16] = 0.5 - (0.32 * userData->gameState.selectedOption);
       
 	  loadImage(esContext, IMG_SELECT_CURSOR, vMusicSelect);
       
-      if((userData->gpioStat & 0x020) != 0 && (userData->prevGpioStat & 0x020) == 0) {
+      if((userData->keyEvent.gpioStat & 0x020) != 0 && (userData->keyEvent.prevGpioStat & 0x020) == 0) {
             //Reset ksh data -> to do in play music;
             
-            if(userData->selectedOption == 0) {
+            if(userData->gameState.selectedOption == 0) {
                   //Speed
-                  userData->stageState = STAGE_OPTION_SEL_SPD;
+                  userData->gameState.stageState = STAGE_OPTION_SEL_SPD;
             }
-            else if(userData->selectedOption == 1) {
+            else if(userData->gameState.selectedOption == 1) {
                   //Restart
-                  userData->stageState = STAGE_PLAY;
+                  userData->gameState.stageState = STAGE_PLAY;
                   
                   //Please load ksh file and set music
                   printf("Load ksh data\n");
                   //getKshData
-                  userData->ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
-                  userData->kshFile = fopen(musicKshFile[userData->musicNum], "r");
-                  userData->qtNote = (QType*)malloc(1 * sizeof(QType));
-                  userData->temp = -2.0;
+                  userData->musicData.ki = (KshInfo*)malloc(1 * sizeof(KshInfo));
+                  userData->musicData.kshFile = fopen(musicKshFile[userData->musicData.musicNum], "r");
+                  userData->musicData.qtNote = (QType*)malloc(1 * sizeof(QType));
+                  userData->musicData.temp = -2.0;
             
-                  if(userData->kshFile == NULL) {
+                  if(userData->musicData.kshFile == NULL) {
                      printf("file load error!\n");
                      exit(1);
                   }
             
-                  getKshInfo(userData->kshFile, userData->ki);
-                  loadKshNote(userData->kshFile, userData->qtNote);
+                  getKshInfo(userData->musicData.kshFile, userData->musicData.ki);
+                  loadKshNote(userData->musicData.kshFile, userData->musicData.qtNote);
                   
                   // Fork for play music
                   pid = fork();
@@ -382,57 +367,57 @@ void Draw ( ESContext *esContext )
                      case 0:     // Play music
                      {
                         //system("omxplayer ../songs/ksm/homura/homura.ogg");
-                        execlp("omxplayer", "omxplayer", musicOggFile[userData->musicNum], NULL);
+                        execlp("omxplayer", "omxplayer", musicOggFile[userData->musicData.musicNum], NULL);
                      }
                      default:
                      {
-                        userData->musicPid = pid;
+                        userData->musicData.musicPid = pid;
                      }
                  }
             }
-            else if(userData->selectedOption == 2) {
+            else if(userData->gameState.selectedOption == 2) {
                   //SelectMusic
-                  userData->stageState = STAGE_SELECT_MUSIC;
+                  userData->gameState.stageState = STAGE_SELECT_MUSIC;
             }
-            else if(userData->selectedOption == 3) {
+            else if(userData->gameState.selectedOption == 3) {
                   //Main Menu
-                  userData->stageState = STAGE_MAIN;
+                  userData->gameState.stageState = STAGE_MAIN;
             }
       }
    }
-   else if(userData->stageState == STAGE_OPTION_SEL_SPD) {
+   else if(userData->gameState.stageState == STAGE_OPTION_SEL_SPD) {
 	  loadImage(esContext, IMG_OPTION, vFullScreen);
       
-      setOutputGPIO(userData->gpioStat);
+      setOutputGPIO(userData->keyEvent.gpioStat);
       
-      if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_RIGHT) {
-            userData->selectedSpeed = (userData->selectedSpeed + 1) % 4;
+      if(checkRotDirection(userData->keyEvent.prevGpioStat, userData->keyEvent.gpioStat, 1) == ROT_RIGHT) {
+            userData->gameState.selectedSpeed = (userData->gameState.selectedSpeed + 1) % 4;
       }
-      else if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_LEFT) {
-            userData->selectedSpeed = (userData->selectedSpeed + 3) % 4;
+      else if(checkRotDirection(userData->keyEvent.prevGpioStat, userData->keyEvent.gpioStat, 1) == ROT_LEFT) {
+            userData->gameState.selectedSpeed = (userData->gameState.selectedSpeed + 3) % 4;
       }
       
       //----------------Change This Code - move horizental-----------------------//
-      vSpeedSelect[0] = -0.13 + (0.23 * userData->selectedSpeed);
-      vSpeedSelect[5] = -0.13 + (0.23 * userData->selectedSpeed);
-      vSpeedSelect[10] = -0.09 + (0.23 * userData->selectedSpeed);
-      vSpeedSelect[15] = -0.09 + (0.23 * userData->selectedSpeed);
+      vSpeedSelect[0] = -0.13 + (0.23 * userData->gameState.selectedSpeed);
+      vSpeedSelect[5] = -0.13 + (0.23 * userData->gameState.selectedSpeed);
+      vSpeedSelect[10] = -0.09 + (0.23 * userData->gameState.selectedSpeed);
+      vSpeedSelect[15] = -0.09 + (0.23 * userData->gameState.selectedSpeed);
       
 	  loadImage(esContext, IMG_SELECT_CURSOR, vSpeedSelect);
       
-      setOutputGPIO(userData->gpioStat);
+      setOutputGPIO(userData->keyEvent.gpioStat);
       
-      if((userData->gpioStat & 0x020) != 0 && (userData->prevGpioStat & 0x020) == 0) {
+      if((userData->keyEvent.gpioStat & 0x020) != 0 && (userData->keyEvent.prevGpioStat & 0x020) == 0) {
             //Reset ksh data -> to do in play music;
-            userData->speed = userData->selectedSpeed;
-            userData->stageState = STAGE_OPTION;
+            userData->musicData.speed = userData->gameState.selectedSpeed;
+            userData->gameState.stageState = STAGE_OPTION;
       }
-      else if((userData->gpioStat & 0x010) != 0 && (userData->prevGpioStat & 0x020) == 0) {
-            userData->selectedSpeed = userData->speed;
-            userData->stageState = STAGE_OPTION;
+      else if((userData->keyEvent.gpioStat & 0x010) != 0 && (userData->keyEvent.prevGpioStat & 0x020) == 0) {
+            userData->gameState.selectedSpeed = userData->musicData.speed;
+            userData->gameState.stageState = STAGE_OPTION;
       }
    }
-   else if(userData->stageState == STAGE_PLAY) {
+   else if(userData->gameState.stageState == STAGE_PLAY) {
          //==================
          
          //printf(".");
@@ -440,17 +425,17 @@ void Draw ( ESContext *esContext )
          // Judge notes : Input from GPIO
          while(tempQNode->link != NULL) {
             if(((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
-                  - userData->temp < -0.5)
+                  - userData->musicData.temp < -0.5)
             {
                if(tempQNode->note.hitted != 1) {
                   // Check note type
                   for(i = 0; i <= 6; i++) {
                      if(((tempQNode->note.type & 0x0FFF) & (RP_NOTE_TYPE_BT_FIRST >> i)) != 0) {
                            // Check note is hitted : BT1 ~ BT4
-                           if( (i < 4) && ((userData->gpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 2))) != 0)
-                           && ((userData->prevGpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 2))) == 0)
+                           if( (i < 4) && ((userData->keyEvent.gpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 2))) != 0)
+                           && ((userData->keyEvent.prevGpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 2))) == 0)
                            && ((hittedGpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 2))) == 0) ) {
-                                 printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> (i + 2));
+                                 printf("%x == %x\n", userData->keyEvent.gpioStat, RP_NOTE_TYPE_BT_FIRST >> (i + 2));
                                  hittedGpioStat |= (RP_NOTE_TYPE_BT_FIRST >> (i + 2));
                                  if((tempQNode->note.type & 0xF000) != 0) {
                                     tempQNode->note.hitted = 0x02;
@@ -461,10 +446,10 @@ void Draw ( ESContext *esContext )
                                  printf("button hit\n");
                                  break;
                            } // Check note is hitted : FX1, FX2
-                           else if( (i > 4) && ((userData->gpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 1))) != 0)
-                           && ((userData->prevGpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 1))) == 0)
+                           else if( (i > 4) && ((userData->keyEvent.gpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 1))) != 0)
+                           && ((userData->keyEvent.prevGpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 1))) == 0)
                            && ((hittedGpioStat & (RP_NOTE_TYPE_BT_FIRST >> (i + 1))) == 0) ) {
-                                 printf("%x == %x\n", userData->gpioStat, RP_NOTE_TYPE_BT_FIRST >> (i + 1));
+                                 printf("%x == %x\n", userData->keyEvent.gpioStat, RP_NOTE_TYPE_BT_FIRST >> (i + 1));
                                  hittedGpioStat |= (RP_NOTE_TYPE_BT_FIRST >> (i + 1));
                                  if((tempQNode->note.type & 0xF000) != 0) {
                                     tempQNode->note.hitted = 0x02;
@@ -482,28 +467,28 @@ void Draw ( ESContext *esContext )
             }
             else {
                   // Init QNode and break;
-                  tempQNode = userData->qtNote->front;
+                  tempQNode = userData->musicData.qtNote->front;
                   break;
             }
          }
          
          // Judge notes : Out of line
-         while(userData->qtNote->front->link != NULL) {
-            if(((float)(userData->qtNote->front->note.measure) * 2.0) - userData->temp < - 10.0)
+         while(userData->musicData.qtNote->front->link != NULL) {
+            if(((float)(userData->musicData.qtNote->front->note.measure) * 2.0) - userData->musicData.temp < - 10.0)
             {
-                  dequeue(userData->qtNote);
+                  dequeue(userData->musicData.qtNote);
                   printf("pop note : out of lines\n");
             }
             else {
                   // Init QNode
-                  tempQNode = userData->qtNote->front;
+                  tempQNode = userData->musicData.qtNote->front;
                   break;
             }
          }
          
          // Draw about input from GPIO
          for(i = 9; i >= 4; i--) {
-            if( (userData->gpioStat & (0x01 << i)) >> i == 0x01 ) {
+            if( (userData->keyEvent.gpioStat & (0x01 << i)) >> i == 0x01 ) {
 			   loadImage(esContext, IMG_GPIO_INPUT, vGpioVertices[9-i]);
             }
          }
@@ -537,13 +522,13 @@ void Draw ( ESContext *esContext )
                   
       
                   vRpVertices[i][1] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
-                                      - userData->temp + highNoteWidth;
+                                      - userData->musicData.temp + highNoteWidth;
                   vRpVertices[i][6] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
-                                      - userData->temp - lowNoteWidth;
+                                      - userData->musicData.temp - lowNoteWidth;
                   vRpVertices[i][11] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
-                                      - userData->temp - lowNoteWidth;
+                                      - userData->musicData.temp - lowNoteWidth;
                   vRpVertices[i][16] = ((float)(tempQNode->note.measure) + (float)(tempQNode->note.order)/(float)(tempQNode->note.max)) * 2.0
-                                       - userData->temp + highNoteWidth;
+                                       - userData->musicData.temp + highNoteWidth;
        			  
 				  loadImage(esContext, IMG_NOTE, vRpVertices[i]);
                }
@@ -551,22 +536,21 @@ void Draw ( ESContext *esContext )
             tempQNode = tempQNode->link;
          }
          // LED Enable
-         setOutputGPIO(userData->gpioStat);
+         setOutputGPIO(userData->keyEvent.gpioStat);
          
          //End Music
-         if(userData->qtNote->front->link == NULL) {
+         if(userData->musicData.qtNote->front->link == NULL) {
+               free(userData->musicData.ki);
+               userData->musicData.ki = NULL;
+               fclose(userData->musicData.kshFile);
+               free(userData->musicData.qtNote);
+               userData->musicData.qtNote = NULL;
+               userData->gameState.selectedOption = 0;
                
-               free(userData->ki);
-               userData->ki = NULL;
-               fclose(userData->kshFile);
-               free(userData->qtNote);
-               userData->qtNote = NULL;
-               userData->selectedOption = 0;
-               
-               userData->stageState = STAGE_END;              
+               userData->gameState.stageState = STAGE_END;              
          }
 
-         if((userData->gpioStat & 0x400) != 0) {
+         if((userData->keyEvent.gpioStat & 0x400) != 0) {
                //Initialize ksh Data;
                cmdStream = popen("ps -a | grep omxplayer.bin", "r");
                fscanf(cmdStream, "%d", &cmdPid); 
@@ -580,49 +564,49 @@ void Draw ( ESContext *esContext )
 
                pclose(cmdStream);
 
-               while(userData->qtNote->front != NULL) {     // free qtNote;
-                     dequeue(userData->qtNote);
+               while(userData->musicData.qtNote->front != NULL) {     // free qtNote;
+                     dequeue(userData->musicData.qtNote);
                }
-               free(userData->ki);
-               userData->ki = NULL;
-               fclose(userData->kshFile);
-               free(userData->qtNote);
-               userData->qtNote = NULL;
-               userData->selectedOption = 0;
+               free(userData->musicData.ki);
+               userData->musicData.ki = NULL;
+               fclose(userData->musicData.kshFile);
+               free(userData->musicData.qtNote);
+               userData->musicData.qtNote = NULL;
+               userData->gameState.selectedOption = 0;
                
-               userData->stageState = STAGE_OPTION;
+               userData->gameState.stageState = STAGE_OPTION;
          }         
 
   }
-   else if(userData->stageState == STAGE_END) {
+   else if(userData->gameState.stageState == STAGE_END) {
 	  loadImage(esContext, IMG_END, vFullScreen);
       
       // LED Enable
-      setOutputGPIO(userData->gpioStat);
+      setOutputGPIO(userData->keyEvent.gpioStat);
       
-      if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_RIGHT) {
-            userData->selectedOption = (userData->selectedOption + 1) % 2;
+      if(checkRotDirection(userData->keyEvent.prevGpioStat, userData->keyEvent.gpioStat, 1) == ROT_RIGHT) {
+            userData->gameState.selectedOption = (userData->gameState.selectedOption + 1) % 2;
       }
-      else if(checkRotDirection(userData->prevGpioStat, userData->gpioStat, 1) == ROT_LEFT) {
-            userData->selectedOption = (userData->selectedOption + 1) % 2;
+      else if(checkRotDirection(userData->keyEvent.prevGpioStat, userData->keyEvent.gpioStat, 1) == ROT_LEFT) {
+            userData->gameState.selectedOption = (userData->gameState.selectedOption + 1) % 2;
       }
       
-      vMusicSelect[1] = -0.2 - (0.2 * userData->selectedOption);
-      vMusicSelect[6] = -0.4 - (0.2 * userData->selectedOption);
-      vMusicSelect[11] = -0.4 - (0.2 * userData->selectedOption);
-      vMusicSelect[16] = -0.2 - (0.2 * userData->selectedOption);
+      vMusicSelect[1] = -0.2 - (0.2 * userData->gameState.selectedOption);
+      vMusicSelect[6] = -0.4 - (0.2 * userData->gameState.selectedOption);
+      vMusicSelect[11] = -0.4 - (0.2 * userData->gameState.selectedOption);
+      vMusicSelect[16] = -0.2 - (0.2 * userData->gameState.selectedOption);
  
 	  loadImage(esContext, IMG_SELECT_CURSOR, vMusicSelect);
             
-      if((userData->gpioStat & 0x020) != 0) {
-            if(userData->selectedOption == 0) {
+      if((userData->keyEvent.gpioStat & 0x020) != 0) {
+            if(userData->gameState.selectedOption == 0) {
                   // Continue -> select music
-                  userData->stageState = STAGE_SELECT_MUSIC;
+                  userData->gameState.stageState = STAGE_SELECT_MUSIC;
             }
-            else if(userData->selectedOption == 1) {
+            else if(userData->gameState.selectedOption == 1) {
                   // Exit -> main
-                  userData->selectedOption = 0;
-                  userData->stageState = STAGE_MAIN;
+                  userData->gameState.selectedOption = 0;
+                  userData->gameState.stageState = STAGE_MAIN;
             }
       }
    }
@@ -643,10 +627,10 @@ void ShutDown ( ESContext *esContext )
 
    for(i = 0; i < IMG_MAX_NUM; i++) {
       // Delete texture object
-      glDeleteTextures ( 1, &userData->textureId[i] );
+      glDeleteTextures ( 1, &userData->glData.textureId[i] );
 
       // Delete program object
-      glDeleteProgram ( userData->programObject[i] );   
+      glDeleteProgram ( userData->glData.programObject[i] );   
    }
 
    free(esContext->userData);
@@ -656,20 +640,20 @@ void Update ( ESContext *esContext, float deltaTime ) {
    UserData *userData = ( UserData* ) esContext->userData;
 
    
-   if(userData->stageState == STAGE_PLAY) {
-      //deltaTime = 120pbm(4/4 bit), userData->ki->t = bpm of song
-      userData->temp += deltaTime * (userData->ki->t / 120.0);
-      userData->measureBar += deltaTime * (userData->ki->t / 120.0);
+   if(userData->gameState.stageState == STAGE_PLAY) {
+      //deltaTime = 120pbm(4/4 bit), userData->musicData.ki->t = bpm of song
+      userData->musicData.temp += deltaTime * (userData->musicData.ki->t / 120.0);
+      userData->musicData.measureBar += deltaTime * (userData->musicData.ki->t / 120.0);
    }
    else {
-      userData->temp += deltaTime;
+      userData->musicData.temp += deltaTime;
    }
    
-   userData->prevGpioStat = userData->gpioStat;
-   userData->gpioStat = inputGPIOStat();
+   userData->keyEvent.prevGpioStat = userData->keyEvent.gpioStat;
+   userData->keyEvent.gpioStat = inputGPIOStat();
 
-   if(userData->measureBar > 1.0) {
-      userData->measureBar = -1.0;
+   if(userData->musicData.measureBar > 1.0) {
+      userData->musicData.measureBar = -1.0;
    }
 }
 
